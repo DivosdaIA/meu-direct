@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meu Direct</title>
+<style>
+/* ===== MARCA: a skill troca estes valores pelas cores, fontes e nome da marca ===== */
+:root {
+  --nome-painel: "Meu Direct";
+  --fundo: #F6F3EE;            /* fundo da pagina */
+  --superficie: #FFFFFF;       /* cartoes */
+  --superficie-2: #F1ECE4;     /* campos e areas suaves */
+  --borda: #E6DFD3;
+  --texto: #221B17;
+  --texto-suave: #73685F;
+  --menu-fundo: #211C19;       /* menu lateral */
+  --menu-texto: #F4EEE6;
+  --destaque: #2F2723;         /* cor principal: botoes, item ativo, numeros */
+  --destaque-2: #B08968;       /* cor de apoio: degrades e brilhos */
+  --destaque-texto: #FFFFFF;   /* texto em cima da cor principal */
+  --destaque-suave: #EFE6DA;   /* a cor principal bem clarinha */
+  --fonte: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  --fonte-titulo: ui-serif, Georgia, "Times New Roman", serif;
+  --sucesso: #1F7A4D;
+  --alerta: #9A6200;
+  --erro: #B42318;
+  --raio: 18px;
+}
+/* ===== fim da MARCA ===== */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: var(--fonte); background: var(--fundo); color: var(--texto); font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+button, input, textarea, select { font: inherit; color: inherit; }
+a { color: inherit; }
+.app { display: grid; grid-template-columns: 252px 1fr; min-height: 100vh; }
+
+/* menu lateral */
+.menu { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 4px; padding: 22px 16px; overflow: hidden;
+  background: linear-gradient(180deg, var(--menu-fundo), color-mix(in srgb, var(--menu-fundo) 82%, #000)); color: var(--menu-texto); }
+.menu::after { content: ""; position: absolute; width: 320px; height: 320px; left: -120px; bottom: -140px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--destaque-2) 45%, transparent), transparent 70%); pointer-events: none; }
+.menu > * { position: relative; z-index: 1; }
+.logo { display: flex; align-items: center; gap: 12px; padding: 2px 8px 22px; }
+.logo-img { width: 44px; height: 44px; object-fit: contain; border-radius: 12px; }
+.logo .marca { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--destaque), var(--destaque-2)); color: var(--destaque-texto); display: grid; place-items: center; font-family: var(--fonte-titulo); font-weight: 700; font-size: 20px; flex: none; }
+.logo .nome { font-family: var(--fonte-titulo); font-weight: 700; font-size: 19px; line-height: 1.1; }
+.logo .nome small { display: block; font-family: var(--fonte); font-weight: 500; font-size: 9.5px; letter-spacing: .1em; white-space: nowrap; text-transform: uppercase; opacity: .55; margin-top: 4px; }
+.menu button.nav { text-align: left; border: 0; background: none; padding: 11px 12px; border-radius: 12px; cursor: pointer; display: flex; gap: 11px; align-items: center; color: color-mix(in srgb, var(--menu-texto) 68%, transparent); font-weight: 500; position: relative; }
+.menu button.nav svg { width: 19px; height: 19px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.menu button.nav:hover { background: rgba(255,255,255,.06); color: var(--menu-texto); }
+.menu button.nav.ativo { background: rgba(255,255,255,.1); color: var(--menu-texto); font-weight: 600; }
+.menu button.nav.ativo::before { content: ""; position: absolute; left: -16px; top: 9px; bottom: 9px; width: 4px; border-radius: 0 4px 4px 0; background: var(--destaque-2); }
+.conta-box { margin-top: auto; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 12px; }
+.conta-box .rot { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; opacity: .55; margin-bottom: 8px; }
+.conta-atual { display: flex; gap: 10px; align-items: center; }
+.conta-atual .av { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--destaque-2), var(--destaque)); display: grid; place-items: center; font-weight: 700; color: #fff; flex: none; overflow: hidden; }
+.conta-atual .av img { width: 100%; height: 100%; object-fit: cover; }
+.conta-atual b { display: block; font-size: 14px; }
+.conta-atual small { opacity: .6; font-size: 12px; }
+.conta-box select { width: 100%; margin-top: 10px; background: rgba(0,0,0,.25); color: var(--menu-texto); border: 1px solid rgba(255,255,255,.15); border-radius: 10px; padding: 8px 10px; }
+.conta-box a { display: block; margin-top: 8px; font-size: 12.5px; opacity: .75; text-decoration: none; }
+.conta-box a:hover { opacity: 1; text-decoration: underline; }
+.selo-demo { display: inline-block; background: #FFE9A8; color: #5C4300; border-radius: 99px; padding: 2px 9px; font-size: 11px; font-weight: 700; margin-top: 10px; }
+
+main { padding: 34px 40px 90px; min-width: 0; position: relative; }
+main:focus { outline: none; }
+main::before { content: ""; position: absolute; right: -160px; top: -200px; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--destaque-2) 22%, transparent), transparent 70%); pointer-events: none; z-index: 0; }
+main > * { position: relative; z-index: 1; }
+h1 { font-family: var(--fonte-titulo); font-size: 34px; margin: 0 0 6px; letter-spacing: -.01em; line-height: 1.1; font-weight: 700; }
+h1 em { font-style: italic; color: var(--destaque); }
+.sub { color: var(--texto-suave); margin: 0 0 26px; }
+.topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--borda); background: var(--superficie); padding: 10px 18px; border-radius: 99px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: transform .15s, box-shadow .15s; }
+.btn:hover { border-color: var(--texto-suave); }
+.btn.principal { background: linear-gradient(135deg, var(--destaque), color-mix(in srgb, var(--destaque) 70%, var(--destaque-2))); color: var(--destaque-texto); border-color: transparent; box-shadow: 0 8px 22px color-mix(in srgb, var(--destaque) 30%, transparent); }
+.btn.principal:hover { transform: translateY(-1px); box-shadow: 0 12px 26px color-mix(in srgb, var(--destaque) 38%, transparent); }
+.btn.perigo { color: var(--erro); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn.peq { padding: 6px 13px; font-size: 13.5px; }
+.cartao { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 22px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+.vazio { text-align: center; padding: 52px 20px; color: var(--texto-suave); }
+.vazio h3 { color: var(--texto); margin: 0 0 6px; font-family: var(--fonte-titulo); font-size: 22px; }
+
+/* numeros do topo */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 0 0 26px; }
+.kpi { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 18px 20px; }
+.kpi .v { font-family: var(--fonte-titulo); font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.kpi .r { font-size: 13px; color: var(--texto-suave); }
+.kpi.forte { background: linear-gradient(135deg, var(--destaque), color-mix(in srgb, var(--destaque) 55%, var(--destaque-2))); color: var(--destaque-texto); border-color: transparent; box-shadow: 0 14px 30px color-mix(in srgb, var(--destaque) 28%, transparent); }
+.kpi.forte .r { color: color-mix(in srgb, var(--destaque-texto) 78%, transparent); }
+
+.grade-auto { display: grid; gap: 14px; }
+.auto { display: grid; grid-template-columns: 76px 1fr auto; gap: 18px; align-items: center; transition: box-shadow .2s, transform .2s; }
+.auto:hover { box-shadow: 0 10px 28px rgba(0,0,0,.06); transform: translateY(-1px); }
+.auto img, .auto .mini { width: 76px; height: 76px; border-radius: 14px; object-fit: cover; background: var(--destaque-suave); display: grid; place-items: center; font-size: 12px; color: var(--destaque); font-weight: 600; text-align: center; }
+.auto h3 { margin: 0 0 4px; font-size: 17px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pill { font-size: 11.5px; font-weight: 700; border-radius: 99px; padding: 2px 10px; background: #DDF3E6; color: var(--sucesso); }
+.pill.off { background: var(--superficie-2); color: var(--texto-suave); }
+.etiquetas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.etq { background: var(--superficie-2); border-radius: 99px; padding: 3px 11px; font-size: 12.5px; color: var(--texto-suave); }
+.etq.forte { background: var(--destaque-suave); color: var(--destaque); font-weight: 700; }
+.numeros { display: flex; gap: 20px; font-size: 13px; color: var(--texto-suave); margin-top: 10px; flex-wrap: wrap; }
+.numeros b { color: var(--texto); font-size: 16px; font-family: var(--fonte-titulo); }
+.acoes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.chave { position: relative; width: 46px; height: 27px; flex: none; }
+.chave input { opacity: 0; width: 0; height: 0; position: absolute; }
+.chave span { position: absolute; inset: 0; background: #CFC7BB; border-radius: 99px; cursor: pointer; transition: .2s; }
+.chave span::after { content: ""; position: absolute; width: 21px; height: 21px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.chave input:checked + span { background: var(--sucesso); }
+.chave input:checked + span::after { transform: translateX(19px); }
+.chave input:focus-visible + span { outline: 2px solid var(--texto); outline-offset: 2px; }
+
+/* editor */
+.editor { display: grid; grid-template-columns: minmax(0, 1fr) 370px; gap: 30px; align-items: start; }
+.passo { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 20px 22px; margin-bottom: 14px; }
+.passo > h3 { margin: 0 0 2px; font-size: 16.5px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.passo .dica, p.dica { margin: 2px 0 12px; color: var(--texto-suave); font-size: 13.5px; }
+.num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; background: linear-gradient(135deg, var(--destaque), var(--destaque-2)); color: var(--destaque-texto); font-size: 13px; font-weight: 700; margin-right: 10px; }
+.opcoes { display: grid; gap: 8px; }
+.opcao { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--borda); border-radius: 13px; padding: 12px 14px; cursor: pointer; background: var(--superficie); transition: border-color .15s, background .15s; }
+.opcao:hover { border-color: var(--destaque-2); }
+.opcao.sel { border-color: var(--destaque); background: color-mix(in srgb, var(--destaque-suave) 55%, var(--superficie)); box-shadow: inset 0 0 0 1px var(--destaque); }
+.opcao input { margin-top: 3px; accent-color: var(--destaque); }
+.opcao small { display: block; color: var(--texto-suave); }
+.chips-gat { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-gat { border: 1px solid var(--borda); background: var(--superficie); border-radius: 99px; padding: 9px 16px; cursor: pointer; font-weight: 600; }
+.chip-gat:hover { border-color: var(--destaque-2); }
+.chip-gat.sel { background: var(--destaque); color: var(--destaque-texto); border-color: var(--destaque); }
+label.campo { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
+label.campo .cont { float: right; font-weight: 400; color: var(--texto-suave); }
+input[type=text], input[type=url], input[type=number], input[type=password], textarea, select { width: 100%; border: 1px solid var(--borda); border-radius: 12px; padding: 11px 13px; background: var(--superficie); }
+textarea { resize: vertical; min-height: 78px; }
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--destaque); outline-offset: -1px; border-color: transparent; }
+.linha { display: flex; gap: 10px; align-items: center; }
+.linha > * { flex: 1; }
+.linha > .fixo { flex: none; }
+.grade-posts { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 9px; margin-top: 12px; max-height: 310px; overflow: auto; padding: 3px; }
+.post-mini { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 3px solid transparent; cursor: pointer; padding: 0; background: var(--superficie-2); }
+.post-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.post-mini.sel { border-color: var(--destaque); }
+.post-mini.sel::after { content: "✓"; position: absolute; top: 5px; right: 5px; width: 24px; height: 24px; border-radius: 50%; background: var(--destaque); color: var(--destaque-texto); display: grid; place-items: center; font-size: 13px; }
+.tags-input { display: flex; flex-wrap: wrap; gap: 6px; border: 1px solid var(--borda); border-radius: 12px; padding: 7px; background: var(--superficie); }
+.tags-input input { border: 0; flex: 1; min-width: 140px; padding: 5px; }
+.tags-input input:focus { outline: none; }
+.tag { background: var(--destaque-suave); color: var(--destaque); border-radius: 99px; padding: 3px 6px 3px 12px; display: inline-flex; gap: 4px; align-items: center; font-weight: 700; font-size: 13.5px; text-transform: uppercase; letter-spacing: .02em; }
+.tag button { border: 0; background: none; cursor: pointer; color: inherit; opacity: .6; padding: 0 4px; font-size: 15px; }
+.sugestoes { font-size: 13px; color: var(--texto-suave); margin-top: 7px; }
+.sugestoes button { border: 0; background: none; text-decoration: underline; cursor: pointer; color: var(--destaque); padding: 0 3px; }
+.cabeca-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bloco-botao { border: 1px dashed var(--destaque-2); border-radius: 13px; padding: 10px 13px; margin-top: 8px; background: color-mix(in srgb, var(--destaque-suave) 30%, var(--superficie)); }
+.aviso { border-radius: 13px; padding: 11px 14px; font-size: 13.5px; margin-top: 10px; background: #FFF4D6; color: #5C4300; }
+.aviso.erro { background: #FDECEA; color: var(--erro); }
+.aviso.info { background: var(--destaque-suave); color: var(--texto); }
+.barra-salvar { position: sticky; bottom: 0; background: linear-gradient(transparent, var(--fundo) 32%); padding: 20px 0 8px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* celular de pre-visualizacao */
+.celular-wrap { position: sticky; top: 22px; }
+.celular-wrap::before { content: ""; position: absolute; inset: 60px -10px 0; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--destaque-2) 35%, transparent), transparent 70%); z-index: -1; filter: blur(10px); }
+.abas { display: flex; background: var(--superficie); border: 1px solid var(--borda); border-radius: 99px; padding: 4px; margin-bottom: 14px; }
+.abas button { flex: 1; border: 0; background: none; padding: 8px; border-radius: 99px; cursor: pointer; font-weight: 600; color: var(--texto-suave); }
+.abas button.sel { background: var(--destaque); color: var(--destaque-texto); }
+.celular { width: 100%; max-width: 340px; margin: 0 auto; aspect-ratio: 9 / 18.5; background: #0B0B0B; border-radius: 46px; padding: 11px; box-shadow: 0 30px 60px rgba(0,0,0,.22), inset 0 0 0 2px #2A2A2A; }
+.tela { background: #fff; color: #111; height: 100%; border-radius: 36px; overflow: hidden; display: flex; flex-direction: column; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+.tela .barra { height: 34px; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font-weight: 600; font-size: 12px; }
+.tela .cab { display: flex; align-items: center; gap: 9px; padding: 8px 14px; border-bottom: 1px solid #eee; font-weight: 600; }
+.ava { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--destaque-2), var(--destaque)); flex: none; }
+.ava.cinza { background: #ccc; }
+.tela .corpo { flex: 1; overflow: auto; padding: 12px 14px; }
+.post-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; background: #eee; display: grid; place-items: center; color: #999; }
+.legenda { margin-top: 8px; }
+.com { display: flex; gap: 8px; margin: 10px 0; }
+.com .txt b { margin-right: 4px; }
+.com.resp { margin-left: 34px; }
+.com .meta { color: #8e8e8e; font-size: 11.5px; margin-top: 2px; }
+.bolha { max-width: 82%; padding: 9px 12px; border-radius: 18px; margin: 6px 0; white-space: pre-wrap; word-wrap: break-word; }
+.bolha.eu { background: #3797F0; color: #fff; margin-left: auto; border-bottom-right-radius: 5px; }
+.bolha.ela { background: #EFEFEF; border-bottom-left-radius: 5px; }
+.bolha .btns { margin: 9px -12px -9px; border-top: 1px solid rgba(0,0,0,.08); }
+.bolha .btns div { text-align: center; padding: 8px; border-bottom: 1px solid rgba(0,0,0,.08); font-weight: 600; color: #0064D1; }
+.bolha .btns div:last-child { border-bottom: 0; }
+.sistema { text-align: center; color: #8e8e8e; font-size: 11px; margin: 12px 0 4px; }
+.toque { text-align: right; color: #8e8e8e; font-size: 11px; }
+
+/* modal, tabela, avisos */
+.fundo-modal { position: fixed; inset: 0; background: rgba(20,14,12,.5); display: grid; place-items: center; padding: 16px; z-index: 20; backdrop-filter: blur(3px); }
+.modal { background: var(--superficie); border-radius: 22px; width: min(700px, 100%); max-height: 86vh; overflow: auto; padding: 24px; box-shadow: 0 30px 80px rgba(0,0,0,.3); }
+.modal h2 { font-family: var(--fonte-titulo); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 6px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+th { color: var(--texto-suave); font-weight: 600; }
+.st { border-radius: 99px; padding: 2px 10px; font-size: 12px; font-weight: 700; background: var(--superficie-2); white-space: nowrap; }
+.st.sent { background: #DDF3E6; color: var(--sucesso); }
+.st.failed { background: #FDECEA; color: var(--erro); }
+.st.gated, .st.pending { background: #FFF1C2; color: #6B4E00; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--destaque); color: var(--destaque-texto); padding: 12px 20px; border-radius: 99px; z-index: 30; font-weight: 600; max-width: 90vw; box-shadow: 0 12px 30px rgba(0,0,0,.25); }
+.toast.erro { background: var(--erro); color: #fff; }
+.regras li { margin-bottom: 12px; }
+code { background: var(--superficie-2); padding: 1px 6px; border-radius: 6px; }
+@media (max-width: 1120px) { .editor { grid-template-columns: 1fr; } .celular-wrap { position: static; } .kpis { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; }
+  .menu { position: static; height: auto; flex-direction: row; flex-wrap: wrap; padding: 12px; }
+  .menu .logo { width: 100%; padding-bottom: 8px; }
+  .menu button.nav.ativo::before { display: none; }
+  .conta-box { width: 100%; margin-top: 8px; }
+  main { padding: 22px 16px 80px; }
+  h1 { font-size: 27px; }
+  .auto { grid-template-columns: 56px 1fr; }
+  .auto img, .auto .mini { width: 56px; height: 56px; }
+  .auto .acoes { grid-column: 1 / -1; justify-content: flex-start; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="menu" aria-label="Menu">
+    <div class="logo">
+      <img class="logo-img" src="logo.svg" alt="" onload="this.nextElementSibling.style.display='none'" onerror="if(!this.dataset.t){this.dataset.t=1;this.src='logo.png'}else{this.remove()}">
+      <span class="marca" aria-hidden="true">D</span>
+      <span class="nome"><span id="nomePainel">Meu Direct</span><small>automações do direct</small></span>
+    </div>
+    <button class="nav" data-ir="lista"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>Minhas automações</button>
+    <button class="nav" data-ir="nova"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Nova automação</button>
+    <button class="nav" data-ir="perguntas"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M10 9.5a2 2 0 1 1 3 1.7c-.6.4-1 .8-1 1.3"/></svg>Perguntas de abertura</button>
+    <button class="nav" data-ir="regras"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>Regras do Instagram</button>
+    <button class="nav" data-ir="conectar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Configurações</button>
+    <div class="conta-box" id="rodape"></div>
+  </nav>
+  <main id="tela" tabindex="-1"></main>
+</div>
+<div id="modal"></div>
+
+<script>
+// ===================== utilidades =====================
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const NOME_EXEMPLO = 'Maria';
+const personaliza = (s) => String(s || '').replace(/\{\{\s*first_name\s*\}\}/g, NOME_EXEMPLO).replace(/\{\{\s*name\s*\}\}/g, 'Maria Souza').replace(/\{\{\s*username\s*\}\}/g, 'maria.cria');
+
+async function api(metodo, caminho, corpo) {
+  const r = await fetch('/api' + caminho, { method: metodo, headers: { 'Content-Type': 'application/json', 'x-meu-direct': '1' }, body: corpo ? JSON.stringify(corpo) : undefined });
+  let j = {}; try { j = await r.json(); } catch {}
+  if (!r.ok) { const e = new Error(traduzErro(j, r.status)); e.status = r.status; e.dados = j; throw e; }
+  return j;
+}
+function traduzErro(j, status) {
+  const cod = j?.code || '';
+  if (status === 401 || cod === 'invalid_credentials') return 'A chave do Zernio não foi aceita. Confira se copiou inteira, em Configurações.';
+  if (cod === 'TOKEN_EXPIRED') return 'A conexão do Instagram com o Zernio caiu. Entre no Zernio e reconecte a conta (as automações continuam salvas).';
+  if (status === 409) return 'Já existe uma automação ligada nesse post. Desligue a outra ou edite ela.';
+  if (cod === 'free_tier_exceeded' || status === 402) return 'O Zernio pediu cartão: você passou de 2 contas conectadas no plano grátis.';
+  if (cod === 'message_allowance_exceeded') return 'Você passou das 10.000 mensagens grátis do mês no Zernio.';
+  if (status === 429) return 'Muitas chamadas seguidas. Espere um minuto e tente de novo.';
+  const msg = j?.error || j?.message || 'Algo deu errado (' + status + ').';
+  return j?.param ? msg + ' (campo: ' + j.param + ')' : msg;
+}
+function aviso(txt, erro = false) {
+  const t = document.createElement('div'); t.className = 'toast' + (erro ? ' erro' : ''); t.textContent = txt; t.setAttribute('role', 'status');
+  document.body.appendChild(t); setTimeout(() => t.remove(), erro ? 6000 : 3000);
+}
+
+// ===================== estado =====================
+const S = { estado: null, automacoes: [], posts: null, rascunho: null, editandoId: null, aba: 'post', view: 'lista' };
+
+const GATILHOS = {
+  comment: { nome: 'Comentário em post ou reel', curto: 'Comentário' },
+  story_reply: { nome: 'Resposta ao story', curto: 'Story' },
+  story_mention: { nome: 'Menção no story', curto: 'Menção' },
+  live_comment: { nome: 'Comentário na live', curto: 'Live' },
+};
+
+const TEXTOS_GATE = {
+  seguidores: { message: 'Quase lá! Esse conteúdo é só para quem me segue. Me segue e toca no botão abaixo 👇', buttonLabel: 'Já estou seguindo' },
+  toque: { message: 'Que bom que você quer! Toca no botão abaixo que eu te mando agora 👇', buttonLabel: 'Quero receber' },
+};
+function rascunhoNovo() {
+  return {
+    name: '', trigger: 'comment', escopo: 'post', platformPostId: '', postTitle: '', postPicture: '',
+    palavrasModo: 'palavras', keywords: [], matchMode: 'word', typoTolerance: true, excludeKeywords: [],
+    responderPublico: true, respostas: ['Te mandei na DM, {{first_name}}!', 'Olha o seu direct 💌', 'Enviado! Confere a DM'], publicoSempre: false,
+    seguidores: 'seguidores',
+    gate: { message: 'Quase lá! Esse conteúdo é só para quem me segue. Me segue e toca no botão abaixo 👇', buttonLabel: 'Já estou seguindo', profileButtonLabel: 'Ver perfil', notFollowingMessage: 'Ainda não apareceu que você me segue. Me segue e toca de novo no botão 🙌' },
+    dmTextos: ['Oi {{first_name}}! Aqui está o que você pediu 👇'], botoes: [{ title: 'Acessar', url: '' }],
+    imagem: '', atraso: 0, repetir: 'uma', cooldown: 24, tambemDm: false, ocultar: false, curtir: false, isActive: true,
+  };
+}
+
+// API -> rascunho (para editar)
+function deAutomacao(a) {
+  const r = rascunhoNovo();
+  const aud = a.audience || {};
+  Object.assign(r, {
+    name: a.name || '', trigger: a.trigger || 'comment', escopo: a.platformPostId ? 'post' : 'todos', platformPostId: a.platformPostId || '', postTitle: a.postTitle || '',
+    palavrasModo: (a.keywords || []).length ? 'palavras' : 'qualquer', keywords: a.keywords || [], matchMode: a.matchMode || 'contains', typoTolerance: !!a.typoTolerance, excludeKeywords: a.excludeKeywords || [],
+    responderPublico: !!a.commentReply, respostas: a.commentReply ? [a.commentReply, ...(a.commentReplyVariations || [])] : r.respostas, publicoSempre: a.publicReplyPolicy === 'always',
+    seguidores: aud.tapToUnlock ? 'toque' : aud.followerStatus === 'follower' ? 'seguidores' : 'todos',
+    gate: { ...r.gate, ...(a.followGate || {}) },
+    dmTextos: [a.dmMessage || '', ...(a.dmMessageVariations || [])], botoes: (a.buttons || []).filter((b) => b.type === 'url').map((b) => ({ title: b.title, url: b.url })),
+    imagem: a.dmMedia?.url || '', atraso: a.dmDelaySeconds || 0,
+    repetir: a.repeatPolicy?.mode === 'every_comment' ? 'toda' : 'uma', cooldown: a.repeatPolicy?.cooldownHours || 24,
+    tambemDm: !!a.alsoMatchInDms, ocultar: !!a.actions?.hideComment, curtir: !!a.actions?.likeComment, isActive: a.isActive !== false,
+  });
+  const post = (S.posts || []).find((p) => p.id === a.platformPostId); if (post) r.postPicture = post.picture;
+  return r;
+}
+
+// rascunho -> corpo da API do Zernio (POST /v1/comment-automations)
+function paraApi(r) {
+  const limpa = (l) => l.map((s) => s.trim()).filter(Boolean);
+  const b = { name: r.name.trim() || nomeAutomatico(r), trigger: r.trigger, isActive: r.isActive };
+  const temPost = r.trigger === 'comment' && r.escopo === 'post' && r.platformPostId;
+  if (temPost) { b.platformPostId = r.platformPostId; if (r.postTitle) b.postTitle = r.postTitle.slice(0, 120); }
+  if (r.trigger !== 'story_mention' && r.palavrasModo === 'palavras') {
+    b.keywords = r.keywords; b.matchMode = r.matchMode;
+    if (r.matchMode === 'word') b.typoTolerance = r.typoTolerance;
+  } else b.keywords = [];
+  if (r.excludeKeywords.length && r.trigger !== 'story_mention') b.excludeKeywords = r.excludeKeywords;
+  const textos = limpa(r.dmTextos);
+  b.dmMessage = textos[0] || '';
+  if (textos.length > 1) b.dmMessageVariations = textos.slice(1, 6);
+  const botoes = r.botoes.filter((x) => x.title.trim() && x.url.trim()).slice(0, 3);
+  b.buttons = botoes.map((x) => ({ type: 'url', title: x.title.trim(), url: x.url.trim() }));
+  if (r.imagem.trim()) b.dmMedia = { type: 'image', url: r.imagem.trim() };
+  if (Number(r.atraso) > 0) b.dmDelaySeconds = Math.min(86400, Number(r.atraso));
+  const temPublico = ['comment', 'live_comment'].includes(r.trigger);
+  if (temPublico && r.responderPublico) {
+    const resp = limpa(r.respostas);
+    if (resp.length) { b.commentReply = resp[0]; if (resp.length > 1) b.commentReplyVariations = resp.slice(1, 6); b.publicReplyPolicy = r.publicoSempre ? 'always' : 'after_dm'; }
+  }
+  if (r.seguidores === 'seguidores') { b.audience = { followerStatus: 'follower', whenUnknown: 'verify' }; b.followGate = limpaGate(r.gate, true); }
+  else if (r.seguidores === 'toque') { b.audience = { tapToUnlock: true }; b.followGate = limpaGate({ message: r.gate.message, buttonLabel: r.gate.buttonLabel }, false); }
+  else b.audience = { followerStatus: 'any' };
+  b.repeatPolicy = r.repetir === 'toda' ? { mode: 'every_comment', cooldownHours: Math.max(1, Number(r.cooldown) || 24) } : { mode: 'once' };
+  if (r.trigger === 'comment' && r.tambemDm && b.keywords.length) b.alsoMatchInDms = true;
+  if (r.trigger === 'comment') b.actions = { hideComment: !!r.ocultar, likeComment: !!r.curtir };
+  return b;
+}
+function limpaGate(g, completo) {
+  const o = {};
+  if (g.message?.trim()) o.message = g.message.trim();
+  if (g.buttonLabel?.trim()) o.buttonLabel = g.buttonLabel.trim();
+  if (completo && g.profileButtonLabel?.trim()) o.profileButtonLabel = g.profileButtonLabel.trim();
+  if (completo && g.notFollowingMessage?.trim()) o.notFollowingMessage = g.notFollowingMessage.trim();
+  return o;
+}
+function nomeAutomatico(r) {
+  const g = GATILHOS[r.trigger].curto;
+  return r.keywords.length ? `${g}: ${r.keywords.join(', ').toUpperCase()}` : `${g}: qualquer mensagem`;
+}
+
+// conferencias antes de salvar: erros travam, avisos so alertam
+function conferir(r) {
+  const erros = [], avisos = [];
+  const textos = r.dmTextos.map((s) => s.trim()).filter(Boolean);
+  if (!textos.length) erros.push('Escreva a mensagem que vai na DM (passo 5).');
+  const botoes = r.botoes.filter((x) => x.title.trim() || x.url.trim());
+  botoes.forEach((x, i) => {
+    if (!x.title.trim()) erros.push(`O botão ${i + 1} está sem texto.`);
+    if (x.title.trim().length > 20) erros.push(`O texto do botão ${i + 1} passa de 20 caracteres.`);
+    if (!/^https?:\/\/\S+\.\S+/.test(x.url.trim())) erros.push(`O link do botão ${i + 1} precisa começar com https://`);
+  });
+  const lim = botoes.length ? 640 : 1000;
+  textos.forEach((t, i) => { if (t.length > lim) erros.push(`A mensagem ${i + 1} da DM passa de ${lim} caracteres${botoes.length ? ' (com botão o limite é 640)' : ''}.`); });
+  if (r.trigger === 'comment' && r.escopo === 'post' && !r.platformPostId) erros.push('Escolha o post (passo 2) ou marque "qualquer post".');
+  if (r.trigger !== 'story_mention' && r.palavrasModo === 'palavras' && !r.keywords.length) erros.push('Coloque pelo menos uma palavra-chave (passo 3) ou marque "qualquer comentário".');
+  if (r.gate.buttonLabel.length > 20 || r.gate.profileButtonLabel.length > 20) erros.push('O texto dos botões do "só para seguidores" passa de 20 caracteres.');
+  if (r.repetir === 'toda' && !(Number(r.cooldown) >= 1)) erros.push('Diga de quantas em quantas horas a mesma pessoa pode receber de novo.');
+  if (r.trigger !== 'story_mention' && r.palavrasModo === 'qualquer' && r.escopo === 'todos' && r.trigger === 'comment') avisos.push('Qualquer comentário em qualquer post: todo mundo que comentar qualquer coisa vai receber DM. Tem certeza?');
+  if (r.seguidores === 'todos' && (botoes.length || r.imagem.trim())) avisos.push('Para quem não te segue, o Instagram pode recusar DM com botão ou imagem, e a única resposta daquele comentário se perde. Para garantir, ligue "só para seguidores" ou "toque para liberar" no passo 4.');
+  if (r.responderPublico && r.respostas.filter((s) => s.trim()).length < 2 && ['comment', 'live_comment'].includes(r.trigger)) avisos.push('Use pelo menos 2 respostas públicas diferentes: a mesma frase repetida em todo comentário parece spam para o Instagram.');
+  if (r.curtir) avisos.push('Curtir o comentário ainda está em teste no Instagram: só funciona em contas conectadas pelo Facebook e liberadas pela Meta. Se não funcionar, o resto da automação segue normal.');
+  if (r.trigger === 'live_comment') avisos.push('Comentário na live só é respondido enquanto a live está no ar.');
+  if (r.tambemDm && !r.keywords.length) avisos.push('"Também vale na DM" precisa de pelo menos uma palavra-chave, senão o painel desliga essa opção.');
+  return { erros, avisos };
+}
+
+// ===================== navegação =====================
+function ir(view, extra) {
+  S.view = view;
+  document.querySelectorAll('.menu button.nav').forEach((b) => b.classList.toggle('ativo', b.dataset.ir === view || (view === 'editor' && b.dataset.ir === 'nova' && !S.editandoId)));
+  const telas = { lista: telaLista, nova: () => abrirEditor(null), editor: telaEditor, perguntas: telaPerguntas, regras: telaRegras, conectar: telaConectar };
+  (telas[view] || telaLista)(extra);
+  $('#tela').focus({ preventScroll: true });
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('.menu button.nav').forEach((b) => b.addEventListener('click', () => ir(b.dataset.ir)));
+
+function rodape() {
+  const e = S.estado, c = e?.conta;
+  if (!c) { $('#rodape').innerHTML = '<div class="rot">Conta</div>Nenhuma conta conectada'; return; }
+  const outras = (S.contas || []);
+  $('#rodape').innerHTML = `<div class="rot">Conta ativa</div>
+    <div class="conta-atual"><span class="av">${c.foto ? `<img src="${esc(c.foto)}" alt="">` : esc((c.username || '?')[0].toUpperCase())}</span><span><b>@${esc(c.username || 'sua conta')}</b><small>${esc(c.displayName || '')}</small></span></div>
+    ${outras.length > 1 ? `<label class="rot" for="trocaConta" style="display:block;margin:12px 0 0">Trocar de conta</label><select id="trocaConta">${outras.map((o) => `<option value="${esc(o.id)}" ${o.id === c.id ? 'selected' : ''}>@${esc(o.username)}</option>`).join('')}</select>` : ''}
+    <a href="https://zernio.com/dashboard" target="_blank" rel="noopener">+ conectar outra conta no Zernio</a>
+    ${e.demo ? '<span class="selo-demo">modo demonstração</span>' : ''}`;
+  const sel = $('#trocaConta');
+  if (sel) sel.onchange = async () => {
+    const nova = outras.find((o) => o.id === sel.value);
+    try { await api('POST', '/conta', nova); S.estado = await api('GET', '/estado'); S.posts = null; rodape(); aviso('Agora você está em @' + nova.username); ir('lista'); }
+    catch (err) { aviso(err.message, true); }
+  };
+}
+async function carregarContas() { try { const j = await api('GET', '/contas'); S.contas = j.contas || []; const a = S.contas.find((x) => x.id === S.estado?.conta?.id); if (a && S.estado.conta) S.estado.conta = { ...a, ...S.estado.conta, foto: a.foto, displayName: a.displayName }; } catch { S.contas = []; } }
+
+// ===================== tela: conectar =====================
+async function telaConectar() {
+  const e = S.estado || {};
+  $('#tela').innerHTML = `
+    <h1><em>Configurações</em></h1>
+    <p class="sub">Conecte o painel à sua conta do Zernio. Você faz isso uma vez só.</p>
+    <div class="cartao" style="max-width:640px">
+      <h3 style="margin-top:0">1. A chave do Zernio</h3>
+      <p class="dica" style="color:var(--texto-suave)">No Zernio: <b>Settings → API Keys → Create</b>. Copie a chave e cole aqui. Ela fica guardada só no seu computador, no arquivo <code>.env</code> desta pasta, e nunca aparece nesta página.</p>
+      <label class="campo" for="chave">Chave da API</label>
+      <div class="linha"><input id="chave" type="password" autocomplete="off" placeholder="${e.temChave || e.demo ? '•••••••• (já salva, cole outra para trocar)' : 'cole aqui a chave'}"><button class="btn principal fixo" id="testar">Testar e buscar contas</button></div>
+      <div id="contas"></div>
+    </div>`;
+  $('#testar').onclick = async () => {
+    const apiKey = $('#chave').value.trim();
+    $('#testar').disabled = true; $('#testar').textContent = 'Testando...';
+    try {
+      const { contas } = await api('POST', '/contas', apiKey ? { apiKey } : {});
+      $('#chave').value = '';
+      if (!contas.length) { $('#contas').innerHTML = `<div class="aviso">A chave funcionou, mas não achei nenhum Instagram conectado nesse Zernio. Conecte o Instagram lá (Connections → New Connection → Instagram) e clique de novo.</div>`; return; }
+      $('#contas').innerHTML = `<h3>2. Qual Instagram este painel vai usar?</h3><div class="opcoes">${contas.map((c, i) => `
+        <label class="opcao"><input type="radio" name="conta" value="${i}" ${c.id === e.conta?.id ? 'checked' : ''}><span><b>@${esc(c.username)}</b><small>${esc(c.displayName || '')}</small></span></label>`).join('')}</div>
+        <div style="margin-top:14px"><button class="btn principal" id="usar">Usar esta conta</button></div>`;
+      $('#usar').onclick = async () => {
+        const i = document.querySelector('input[name=conta]:checked')?.value;
+        if (i === undefined) return aviso('Escolha uma conta.', true);
+        await api('POST', '/conta', contas[i]);
+        S.estado = await api('GET', '/estado'); S.posts = null; await carregarContas(); rodape();
+        aviso('Pronto! Painel conectado.'); ir('lista');
+      };
+    } catch (err) { $('#contas').innerHTML = `<div class="aviso erro">${esc(err.message)}</div>`; }
+    finally { $('#testar').disabled = false; $('#testar').textContent = 'Testar e buscar contas'; }
+  };
+}
+
+// ===================== tela: lista =====================
+async function telaLista() {
+  $('#tela').innerHTML = `<div class="topo"><div><h1>Suas <em>automações</em></h1><p class="sub">@${esc(S.estado?.conta?.username || '')} · elas rodam no Zernio 24 horas por dia, mesmo com o computador desligado.</p></div><button class="btn principal" id="novaTopo">+ Nova automação</button></div><div id="kpis" class="kpis"></div><div id="listaAuto" class="grade-auto"><div class="cartao vazio">Carregando...</div></div>`;
+  $('#novaTopo').onclick = () => ir('nova');
+  try {
+    const [{ automacoes }] = await Promise.all([api('GET', '/automacoes'), carregarPosts().catch(() => {})]);
+    S.automacoes = automacoes;
+    desenharLista();
+  } catch (err) { $('#listaAuto').innerHTML = `<div class="cartao aviso erro">${esc(err.message)}</div>`; }
+}
+function desenharKpis() {
+  const soma = (k) => S.automacoes.reduce((s, a) => s + (Number(a.stats?.[k]) || 0), 0);
+  const cliques = S.automacoes.reduce((s, a) => s + (Number(a.stats?.linkClicks ?? a.stats?.clicks) || 0), 0);
+  const ligadas = S.automacoes.filter((a) => a.isActive !== false).length;
+  $('#kpis').innerHTML = `<div class="kpi forte"><div class="v">${soma('dmsSent')}</div><div class="r">DMs enviadas</div></div>
+    <div class="kpi"><div class="v">${soma('triggered')}</div><div class="r">pessoas pediram</div></div>
+    <div class="kpi"><div class="v">${cliques}</div><div class="r">cliques no link</div></div>
+    <div class="kpi"><div class="v">${ligadas}<span style="font-size:18px;opacity:.5"> / ${S.automacoes.length}</span></div><div class="r">automações ligadas</div></div>`;
+}
+function desenharLista() {
+  const el = $('#listaAuto');
+  desenharKpis();
+  if (!S.automacoes.length) { el.innerHTML = `<div class="cartao vazio"><h3>Nenhuma automação ainda</h3><p>Crie a primeira: escolha um post, uma palavra e a mensagem que vai na DM.</p><button class="btn principal" onclick="ir('nova')">Criar a primeira</button></div>`; return; }
+  el.innerHTML = S.automacoes.map((a) => {
+    const post = (S.posts || []).find((p) => p.id === a.platformPostId);
+    const st = a.stats || {};
+    const ond = a.trigger === 'comment' ? (a.platformPostId ? 'um post' : 'qualquer post') : GATILHOS[a.trigger]?.nome || a.trigger;
+    const aud = a.audience?.tapToUnlock ? 'toque para liberar' : a.audience?.followerStatus === 'follower' ? 'só seguidores' : null;
+    return `<div class="cartao auto">
+      ${post?.picture ? `<img src="${esc(post.picture)}" alt="">` : `<div class="mini">${esc(GATILHOS[a.trigger]?.curto || '')}</div>`}
+      <div><h3>${esc(a.name)} <span class="pill ${a.isActive === false ? 'off' : ''}">${a.isActive === false ? 'desligada' : 'no ar'}</span></h3>
+        <div class="etiquetas"><span class="etq forte">${esc(ond)}</span>${(a.keywords || []).map((k) => `<span class="etq">${esc(k)}</span>`).join('') || '<span class="etq">qualquer mensagem</span>'}${aud ? `<span class="etq">${aud}</span>` : ''}${a.alsoMatchInDms ? '<span class="etq">também na DM</span>' : ''}</div>
+        <div class="numeros"><span><b>${st.triggered ?? 0}</b> disparos</span><span><b>${st.dmsSent ?? 0}</b> DMs enviadas</span><span><b>${st.linkClicks ?? st.clicks ?? 0}</b> cliques</span>${st.dmsFailed ? `<span style="color:var(--erro)"><b>${st.dmsFailed}</b> falharam</span>` : ''}</div>
+      </div>
+      <div class="acoes">
+        <label class="chave" title="Ligar ou desligar"><input type="checkbox" data-ligar="${esc(a.id)}" ${a.isActive !== false ? 'checked' : ''} aria-label="Ligar ${esc(a.name)}"><span></span></label>
+        <button class="btn peq" data-hist="${esc(a.id)}">Histórico</button>
+        <button class="btn peq" data-editar="${esc(a.id)}">Editar</button>
+        <button class="btn peq perigo" data-apagar="${esc(a.id)}">Apagar</button>
+      </div></div>`;
+  }).join('');
+  el.querySelectorAll('[data-ligar]').forEach((c) => c.onchange = async () => {
+    try { await api('PATCH', '/automacoes/' + c.dataset.ligar, { isActive: c.checked }); aviso(c.checked ? 'Ligada. Ela responde comentários feitos a partir de agora.' : 'Desligada.'); const a = S.automacoes.find((x) => x.id === c.dataset.ligar); if (a) a.isActive = c.checked; desenharLista(); }
+    catch (err) { c.checked = !c.checked; aviso(err.message, true); }
+  });
+  el.querySelectorAll('[data-editar]').forEach((b) => b.onclick = () => abrirEditor(S.automacoes.find((a) => a.id === b.dataset.editar)));
+  el.querySelectorAll('[data-hist]').forEach((b) => b.onclick = () => historico(S.automacoes.find((a) => a.id === b.dataset.hist)));
+  el.querySelectorAll('[data-apagar]').forEach((b) => b.onclick = async () => {
+    const a = S.automacoes.find((x) => x.id === b.dataset.apagar);
+    if (!confirm(`Apagar "${a.name}"? Os links que já foram enviados continuam funcionando.`)) return;
+    try { await api('DELETE', '/automacoes/' + a.id); S.automacoes = S.automacoes.filter((x) => x.id !== a.id); desenharLista(); aviso('Apagada.'); } catch (err) { aviso(err.message, true); }
+  });
+}
+async function historico(a) {
+  const NOMES = { sent: 'enviada', failed: 'falhou', skipped: 'pulada', gated: 'esperando o toque', pending: 'na fila' };
+  $('#modal').innerHTML = `<div class="fundo-modal" id="fm"><div class="modal" role="dialog" aria-modal="true" aria-label="Histórico"><div class="topo"><h2 style="margin:0">Histórico: ${esc(a.name)}</h2><button class="btn peq" id="fechar">Fechar</button></div><div id="hist" style="margin-top:14px">Carregando...</div></div></div>`;
+  const fechar = () => ($('#modal').innerHTML = '');
+  $('#fechar').onclick = fechar; $('#fm').onclick = (e) => { if (e.target.id === 'fm') fechar(); };
+  try {
+    const j = await api('GET', `/automacoes/${a.id}/historico`);
+    const logs = j.logs || [];
+    $('#hist').innerHTML = (logs.length ? `<table><thead><tr><th>Quem</th><th>Comentou</th><th>Resultado</th><th>Cliques</th></tr></thead><tbody>${logs.map((l) => `<tr><td>@${esc(l.commenterUsername || l.commenterName || '?')}</td><td>${esc(l.commentText || '')}</td><td><span class="st ${esc(l.status)}">${esc(NOMES[l.status] || l.status)}</span>${l.error ? `<div style="font-size:12px;color:var(--texto-suave);margin-top:3px">${esc(l.error)}</div>` : ''}</td><td>${l.clickCount ?? 0}</td></tr>`).join('')}</tbody></table>` : '<p class="vazio">Ninguém disparou esta automação ainda.</p>')
+      + (j.misses?.total ? `<div class="aviso info"><b>${j.misses.total} comentários não tinham a palavra-chave.</b> Exemplos: ${(j.misses.samples || []).map((s) => '"' + esc(s.commentText) + '"').join(', ')}. Se forem pedidos de verdade, acrescente essas palavras.</div>` : '');
+  } catch (err) { $('#hist').innerHTML = `<div class="aviso erro">${esc(err.message)}</div>`; }
+}
+
+async function carregarPosts() { if (!S.posts) S.posts = (await api('GET', '/posts')).posts || []; return S.posts; }
+
+// ===================== tela: editor =====================
+function abrirEditor(a) {
+  S.editandoId = a?.id || null;
+  S.rascunho = a ? deAutomacao(a) : rascunhoNovo();
+  S.aba = 'post';
+  ir('editor');
+}
+function telaEditor() {
+  const r = S.rascunho;
+  const ehStoryMencao = r.trigger === 'story_mention';
+  const temPost = r.trigger === 'comment';
+  const temPublico = ['comment', 'live_comment'].includes(r.trigger);
+  let n = 0; const N = () => `<span class="num">${++n}</span>`;
+  $('#tela').innerHTML = `
+  <div class="topo"><div><h1>${S.editandoId ? 'Editar <em>automação</em>' : 'Nova <em>automação</em>'}</h1><p class="sub">Preencha de cima para baixo. O celular mostra como fica.</p></div></div>
+  <div class="editor"><div>
+    <section class="passo"><h3><span>${N()}Quando alguém...</span></h3>
+      <div class="chips-gat">${Object.entries(GATILHOS).map(([k, g]) => `<button class="chip-gat ${r.trigger === k ? 'sel' : ''}" data-gat="${k}">${g.nome}</button>`).join('')}</div>
+      ${r.trigger === 'story_reply' ? '<p class="dica" style="margin-top:10px">Vale para as respostas a qualquer story seu.</p>' : ''}
+      ${ehStoryMencao ? '<p class="dica" style="margin-top:10px">Quando alguém te marcar no story, recebe a DM. Menção não tem texto, então não há palavra-chave.</p>' : ''}
+    </section>
+
+    ${temPost ? `<section class="passo"><h3><span>${N()}Em qual post?</span></h3>
+      <div class="opcoes">
+        <label class="opcao ${r.escopo === 'post' ? 'sel' : ''}"><input type="radio" name="escopo" value="post" ${r.escopo === 'post' ? 'checked' : ''}><span><b>Um post ou reel específico</b><small>O mais comum: o post que pede "comenta X".</small></span></label>
+        <label class="opcao ${r.escopo === 'todos' ? 'sel' : ''}"><input type="radio" name="escopo" value="todos" ${r.escopo === 'todos' ? 'checked' : ''}><span><b>Qualquer post</b><small>Vale para todos, inclusive os próximos.</small></span></label>
+      </div>
+      ${r.escopo === 'post' ? '<div id="posts" class="grade-posts" aria-label="Seus posts"><span class="dica">Carregando seus posts...</span></div><p class="dica" style="margin-top:8px">Postou agora e não apareceu? Espere um minuto e clique em <button class="btn peq" id="recarregar">recarregar</button></p>' : ''}
+    </section>` : ''}
+
+    ${!ehStoryMencao ? `<section class="passo"><h3><span>${N()}E a mensagem tiver...</span></h3>
+      <div class="opcoes">
+        <label class="opcao ${r.palavrasModo === 'palavras' ? 'sel' : ''}"><input type="radio" name="pm" value="palavras" ${r.palavrasModo === 'palavras' ? 'checked' : ''}><span><b>Uma palavra específica</b><small>Ex.: QUERO, GUIA, LINK. Maiúscula ou minúscula, tanto faz.</small></span></label>
+        <label class="opcao ${r.palavrasModo === 'qualquer' ? 'sel' : ''}"><input type="radio" name="pm" value="qualquer" ${r.palavrasModo === 'qualquer' ? 'checked' : ''}><span><b>Qualquer coisa</b><small>Todo comentário dispara.</small></span></label>
+      </div>
+      ${r.palavrasModo === 'palavras' ? `
+        <label class="campo" for="kw">Palavras-chave <span class="cont">Enter ou vírgula para separar</span></label>
+        <div class="tags-input" id="tagsKw">${r.keywords.map((k, i) => `<span class="tag">${esc(k)}<button data-rmkw="${i}" aria-label="Tirar ${esc(k)}">×</button></span>`).join('')}<input id="kw" type="text" placeholder="${r.keywords.length ? '' : 'digite e aperte Enter'}"></div>
+        <div class="sugestoes">Sugestões: ${['quero', 'link', 'guia', 'eu quero', 'preço'].map((s) => `<button data-sug="${s}">${s}</button>`).join('')}</div>
+        <label class="campo" for="mm">Como comparar</label>
+        <select id="mm"><option value="word" ${r.matchMode === 'word' ? 'selected' : ''}>Palavra inteira (recomendado)</option><option value="contains" ${r.matchMode === 'contains' ? 'selected' : ''}>Contém, mesmo dentro de outra palavra</option><option value="exact" ${r.matchMode === 'exact' ? 'selected' : ''}>O comentário tem que ser só a palavra</option></select>
+        ${r.matchMode === 'word' ? `<label class="opcao" style="margin-top:8px"><input type="checkbox" id="typo" ${r.typoTolerance ? 'checked' : ''}><span><b>Aceitar erro de digitação</b><small>"qeuro" também conta. Só para palavras de 4 letras ou mais.</small></span></label>` : ''}
+      ` : ''}
+      <label class="campo" for="ex">Palavras que bloqueiam (opcional) <span class="cont">ex.: não, golpe</span></label>
+      <div class="tags-input" id="tagsEx">${r.excludeKeywords.map((k, i) => `<span class="tag">${esc(k)}<button data-rmex="${i}" aria-label="Tirar ${esc(k)}">×</button></span>`).join('')}<input id="ex" type="text"></div>
+    </section>` : ''}
+
+    ${temPublico ? `<section class="passo"><div class="cabeca-toggle"><h3 style="margin:0"><span>${N()}Responder no comentário</span></h3><label class="chave"><input type="checkbox" id="pub" ${r.responderPublico ? 'checked' : ''} aria-label="Responder em público"><span></span></label></div>
+      <p class="dica">Aparece embaixo do comentário, para todo mundo ver. O Zernio sorteia uma das frases.</p>
+      ${r.responderPublico ? r.respostas.map((t, i) => `<div class="linha" style="margin-top:8px"><input type="text" data-resp="${i}" value="${esc(t)}" aria-label="Resposta ${i + 1}">${r.respostas.length > 1 ? `<button class="btn peq fixo" data-rmresp="${i}">tirar</button>` : ''}</div>`).join('') + (r.respostas.length < 6 ? '<button class="btn peq" id="maisResp" style="margin-top:8px">+ outra frase</button>' : '') + `
+        <label class="opcao" style="margin-top:10px"><input type="checkbox" id="pubSempre" ${r.publicoSempre ? 'checked' : ''}><span><b>Responder mesmo se a DM não sair</b><small>Desligado, a resposta só aparece depois que a DM foi entregue.</small></span></label>` : ''}
+    </section>` : ''}
+
+    <section class="passo"><h3><span>${N()}Só para quem te segue?</span></h3>
+      <p class="dica">O Instagram só conta se a pessoa te segue depois que ela toca num botão na DM. Por isso a primeira mensagem pede o toque.</p>
+      <div class="opcoes">
+        <label class="opcao ${r.seguidores === 'seguidores' ? 'sel' : ''}"><input type="radio" name="seg" value="seguidores" ${r.seguidores === 'seguidores' ? 'checked' : ''}><span><b>Só para seguidores</b><small>Quem não segue recebe o pedido para seguir, com o botão "${esc(r.gate.buttonLabel || 'Já estou seguindo')}".</small></span></label>
+        <label class="opcao ${r.seguidores === 'toque' ? 'sel' : ''}"><input type="radio" name="seg" value="toque" ${r.seguidores === 'toque' ? 'checked' : ''}><span><b>Para todo mundo, com um toque antes</b><small>Não confere se segue. O toque só garante que o link chegue.</small></span></label>
+        <label class="opcao ${r.seguidores === 'todos' ? 'sel' : ''}"><input type="radio" name="seg" value="todos" ${r.seguidores === 'todos' ? 'checked' : ''}><span><b>Para todo mundo, direto</b><small>Mais rápido, mas o Instagram pode barrar botão para quem não segue.</small></span></label>
+      </div>
+      ${r.seguidores !== 'todos' ? `
+        <label class="campo" for="gMsg">Primeira mensagem <span class="cont" id="cGMsg"></span></label>
+        <textarea id="gMsg" maxlength="640">${esc(r.gate.message)}</textarea>
+        <div class="linha"><div><label class="campo" for="gBtn">Texto do botão <span class="cont">até 20</span></label><input id="gBtn" type="text" maxlength="20" value="${esc(r.gate.buttonLabel)}"></div>
+        ${r.seguidores === 'seguidores' ? `<div><label class="campo" for="gPerf">Botão do seu perfil <span class="cont">opcional</span></label><input id="gPerf" type="text" maxlength="20" value="${esc(r.gate.profileButtonLabel)}"></div>` : ''}</div>
+        ${r.seguidores === 'seguidores' ? `<label class="campo" for="gNao">Se tocar e ainda não seguir</label><textarea id="gNao" maxlength="1000">${esc(r.gate.notFollowingMessage)}</textarea>` : ''}` : ''}
+    </section>
+
+    <section class="passo"><h3><span>${N()}A mensagem na DM</span></h3>
+      <p class="dica">Use <b>{{first_name}}</b> para o primeiro nome da pessoa. Escreva até 6 versões: o Zernio sorteia uma a cada envio.</p>
+      ${r.dmTextos.map((t, i) => `<label class="campo" for="dm${i}">${i === 0 ? 'Mensagem' : 'Versão ' + (i + 1)} <span class="cont" id="cdm${i}"></span>${i > 0 ? ` <button class="btn peq" data-rmdm="${i}" style="float:right;margin-left:8px">tirar</button>` : ''}</label><textarea id="dm${i}" data-dm="${i}">${esc(t)}</textarea>`).join('')}
+      ${r.dmTextos.length < 6 ? '<button class="btn peq" id="maisDm" style="margin-top:8px">+ outra versão</button>' : ''}
+      <label class="campo">Botões com link <span class="cont">até 3</span></label>
+      ${r.botoes.map((b, i) => `<div class="bloco-botao"><div class="linha"><div><label class="campo" for="bt${i}" style="margin-top:0">Texto <span class="cont">${b.title.length}/20</span></label><input id="bt${i}" data-bt="${i}" type="text" maxlength="20" value="${esc(b.title)}"></div><button class="btn peq perigo fixo" data-rmbt="${i}" style="align-self:end">tirar</button></div><label class="campo" for="bu${i}">Link</label><input id="bu${i}" data-bu="${i}" type="url" placeholder="https://" value="${esc(b.url)}"></div>`).join('')}
+      ${r.botoes.length < 3 ? '<button class="btn peq" id="maisBt" style="margin-top:8px">+ botão</button>' : ''}
+      <label class="campo" for="img">Imagem depois da mensagem (opcional) <span class="cont">link público de uma imagem</span></label>
+      <input id="img" type="url" placeholder="https://..." value="${esc(r.imagem)}">
+    </section>
+
+    <section class="passo"><h3><span>${N()}Ajustes finais</span></h3>
+      <label class="campo" for="nome">Nome da automação (só você vê)</label>
+      <input id="nome" type="text" placeholder="${esc(nomeAutomatico(r))}" value="${esc(r.name)}">
+      <label class="campo">A mesma pessoa pode receber de novo?</label>
+      <div class="opcoes">
+        <label class="opcao ${r.repetir === 'uma' ? 'sel' : ''}"><input type="radio" name="rep" value="uma" ${r.repetir === 'uma' ? 'checked' : ''}><span><b>Não, uma vez por pessoa</b></span></label>
+        <label class="opcao ${r.repetir === 'toda' ? 'sel' : ''}"><input type="radio" name="rep" value="toda" ${r.repetir === 'toda' ? 'checked' : ''}><span><b>Sim, a cada novo comentário</b><small>Com um intervalo mínimo entre um envio e outro.</small></span></label>
+      </div>
+      ${r.repetir === 'toda' ? `<label class="campo" for="cool">Intervalo mínimo (horas)</label><input id="cool" type="number" min="1" max="8760" value="${esc(r.cooldown)}">` : ''}
+      <label class="campo" for="atraso">Esperar antes de mandar a DM (segundos)</label>
+      <input id="atraso" type="number" min="0" max="86400" value="${esc(r.atraso)}">
+      ${r.trigger === 'comment' ? `
+      <label class="opcao" style="margin-top:12px"><input type="checkbox" id="tDm" ${r.tambemDm ? 'checked' : ''}><span><b>Também responder quem mandar a palavra na DM</b><small>Para quem prefere chamar no direct em vez de comentar.</small></span></label>
+      <label class="opcao" style="margin-top:8px"><input type="checkbox" id="ocultar" ${r.ocultar ? 'checked' : ''}><span><b>Ocultar o comentário depois</b><small>Some do post para os outros, sem apagar.</small></span></label>
+      <label class="opcao" style="margin-top:8px"><input type="checkbox" id="curtir" ${r.curtir ? 'checked' : ''}><span><b>Curtir o comentário</b><small>Em teste no Instagram, pode não funcionar na sua conta.</small></span></label>` : ''}
+    </section>
+
+    <div id="conferencia"></div>
+    <div class="barra-salvar">
+      <button class="btn" id="cancelar">Cancelar</button>
+      <button class="btn" id="salvarPausada">Salvar desligada</button>
+      <button class="btn principal" id="ativar">${S.editandoId ? 'Salvar alterações' : 'Ativar automação'}</button>
+    </div>
+  </div>
+  <aside class="celular-wrap" aria-label="Pré-visualização">
+    <div class="abas" role="tablist">${['post', 'comentarios', 'dm'].map((k) => `<button role="tab" data-aba="${k}" class="${S.aba === k ? 'sel' : ''}" aria-selected="${S.aba === k}">${{ post: 'Post', comentarios: 'Comentários', dm: 'DM' }[k]}</button>`).join('')}</div>
+    <div class="celular"><div class="tela" id="preview"></div></div>
+  </aside></div>`;
+  ligarEditor();
+  desenharPreview(); desenharConferencia(); contadores();
+  if (temPost && r.escopo === 'post') desenharPosts();
+}
+
+function ligarEditor() {
+  const r = S.rascunho;
+  const redesenha = () => telaEditor();
+  const vivo = () => { desenharPreview(); desenharConferencia(); contadores(); };
+  document.querySelectorAll('[data-gat]').forEach((b) => b.onclick = () => { r.trigger = b.dataset.gat; if (r.trigger === 'story_mention') r.keywords = []; redesenha(); });
+  document.querySelectorAll('input[name=escopo]').forEach((i) => i.onchange = () => { r.escopo = i.value; redesenha(); });
+  document.querySelectorAll('input[name=pm]').forEach((i) => i.onchange = () => { r.palavrasModo = i.value; redesenha(); });
+  document.querySelectorAll('input[name=seg]').forEach((i) => i.onchange = () => {
+    // troca os textos padrao junto com o modo; o que a pessoa escreveu a mao fica
+    const de = TEXTOS_GATE[r.seguidores], para = TEXTOS_GATE[i.value];
+    if (de && para) { if (r.gate.message === de.message) r.gate.message = para.message; if (r.gate.buttonLabel === de.buttonLabel) r.gate.buttonLabel = para.buttonLabel; }
+    r.seguidores = i.value; S.aba = 'dm'; redesenha();
+  });
+  document.querySelectorAll('input[name=rep]').forEach((i) => i.onchange = () => { r.repetir = i.value; redesenha(); });
+  const tags = (id, lista) => {
+    const inp = $('#' + id); if (!inp) return;
+    const add = () => { inp.value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean).forEach((v) => { if (!lista.includes(v)) lista.push(v); }); inp.value = ''; redesenha(); setTimeout(() => $('#' + id)?.focus(), 0); };
+    inp.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(); } else if (e.key === 'Backspace' && !inp.value && lista.length) { lista.pop(); redesenha(); setTimeout(() => $('#' + id)?.focus(), 0); } };
+    inp.onblur = () => { if (inp.value.trim()) add(); };
+  };
+  tags('kw', r.keywords); tags('ex', r.excludeKeywords);
+  document.querySelectorAll('[data-rmkw]').forEach((b) => b.onclick = () => { r.keywords.splice(+b.dataset.rmkw, 1); redesenha(); });
+  document.querySelectorAll('[data-rmex]').forEach((b) => b.onclick = () => { r.excludeKeywords.splice(+b.dataset.rmex, 1); redesenha(); });
+  document.querySelectorAll('[data-sug]').forEach((b) => b.onclick = () => { if (!r.keywords.includes(b.dataset.sug)) r.keywords.push(b.dataset.sug); redesenha(); });
+  const on = (id, fn, ev = 'input') => { const el = $('#' + id); if (el) el.addEventListener(ev, () => { fn(el); vivo(); }); };
+  on('mm', (el) => { r.matchMode = el.value; redesenha(); }, 'change');
+  on('typo', (el) => (r.typoTolerance = el.checked), 'change');
+  on('gMsg', (el) => (r.gate.message = el.value)); on('gBtn', (el) => (r.gate.buttonLabel = el.value)); on('gPerf', (el) => (r.gate.profileButtonLabel = el.value)); on('gNao', (el) => (r.gate.notFollowingMessage = el.value));
+  document.querySelectorAll('[data-dm]').forEach((t) => t.oninput = () => { r.dmTextos[+t.dataset.dm] = t.value; S.aba = 'dm'; vivo(); });
+  document.querySelectorAll('[data-rmdm]').forEach((b) => b.onclick = () => { r.dmTextos.splice(+b.dataset.rmdm, 1); redesenha(); });
+  const maisDm = $('#maisDm'); if (maisDm) maisDm.onclick = () => { r.dmTextos.push(''); redesenha(); };
+  document.querySelectorAll('[data-bt]').forEach((t) => t.oninput = () => { r.botoes[+t.dataset.bt].title = t.value; t.closest('.bloco-botao').querySelector('.cont').textContent = t.value.length + '/20'; S.aba = 'dm'; vivo(); });
+  document.querySelectorAll('[data-bu]').forEach((t) => t.oninput = () => { r.botoes[+t.dataset.bu].url = t.value; vivo(); });
+  document.querySelectorAll('[data-rmbt]').forEach((b) => b.onclick = () => { r.botoes.splice(+b.dataset.rmbt, 1); redesenha(); });
+  const maisBt = $('#maisBt'); if (maisBt) maisBt.onclick = () => { r.botoes.push({ title: '', url: '' }); redesenha(); };
+  on('img', (el) => (r.imagem = el.value));
+  on('pub', (el) => { r.responderPublico = el.checked; S.aba = 'comentarios'; redesenha(); }, 'change');
+  document.querySelectorAll('[data-resp]').forEach((t) => t.oninput = () => { r.respostas[+t.dataset.resp] = t.value; S.aba = 'comentarios'; vivo(); });
+  document.querySelectorAll('[data-rmresp]').forEach((b) => b.onclick = () => { r.respostas.splice(+b.dataset.rmresp, 1); redesenha(); });
+  const maisResp = $('#maisResp'); if (maisResp) maisResp.onclick = () => { r.respostas.push(''); redesenha(); };
+  on('pubSempre', (el) => (r.publicoSempre = el.checked), 'change');
+  on('nome', (el) => (r.name = el.value)); on('cool', (el) => (r.cooldown = el.value)); on('atraso', (el) => (r.atraso = el.value));
+  on('tDm', (el) => (r.tambemDm = el.checked), 'change'); on('ocultar', (el) => (r.ocultar = el.checked), 'change'); on('curtir', (el) => (r.curtir = el.checked), 'change');
+  document.querySelectorAll('[data-aba]').forEach((b) => b.onclick = () => { S.aba = b.dataset.aba; document.querySelectorAll('[data-aba]').forEach((x) => { x.classList.toggle('sel', x === b); x.setAttribute('aria-selected', x === b); }); desenharPreview(); });
+  const rec = $('#recarregar'); if (rec) rec.onclick = async () => { S.posts = null; desenharPosts(); };
+  $('#cancelar').onclick = () => ir('lista');
+  $('#salvarPausada').onclick = () => salvar(false);
+  $('#ativar').onclick = () => salvar(true);
+}
+function contadores() {
+  const r = S.rascunho, lim = r.botoes.some((b) => b.title.trim() || b.url.trim()) ? 640 : 1000;
+  r.dmTextos.forEach((t, i) => { const c = $('#cdm' + i); if (c) { c.textContent = `${t.length}/${lim}`; c.style.color = t.length > lim ? 'var(--erro)' : ''; } });
+  const g = $('#cGMsg'); if (g) g.textContent = `${r.gate.message.length}/640`;
+}
+async function desenharPosts() {
+  const el = $('#posts'); if (!el) return;
+  try {
+    const posts = await carregarPosts();
+    if (!posts.length) { el.innerHTML = '<span class="dica">Não achei posts nessa conta.</span>'; return; }
+    el.innerHTML = posts.map((p) => `<button class="post-mini ${p.id === S.rascunho.platformPostId ? 'sel' : ''}" data-post="${esc(p.id)}" title="${esc((p.message || '').slice(0, 90))}" aria-label="Post: ${esc((p.message || 'sem legenda').slice(0, 60))}">${p.picture ? `<img src="${esc(p.picture)}" alt="" loading="lazy">` : esc(p.mediaType || 'post')}</button>`).join('');
+    el.querySelectorAll('[data-post]').forEach((b) => b.onclick = () => {
+      const p = posts.find((x) => x.id === b.dataset.post);
+      Object.assign(S.rascunho, { platformPostId: p.id, postTitle: p.message || '', postPicture: p.picture || '' });
+      el.querySelectorAll('.post-mini').forEach((x) => x.classList.toggle('sel', x === b));
+      S.aba = 'post'; document.querySelectorAll('[data-aba]').forEach((x) => x.classList.toggle('sel', x.dataset.aba === 'post'));
+      desenharPreview(); desenharConferencia();
+    });
+  } catch (err) { el.innerHTML = `<div class="aviso erro">${esc(err.message)}</div>`; }
+}
+function desenharConferencia() {
+  const { erros, avisos } = conferir(S.rascunho);
+  $('#conferencia').innerHTML = erros.map((e) => `<div class="aviso erro">${esc(e)}</div>`).join('') + avisos.map((a) => `<div class="aviso">${esc(a)}</div>`).join('');
+  $('#ativar').disabled = $('#salvarPausada').disabled = erros.length > 0;
+}
+
+function desenharPreview() {
+  const r = S.rascunho, user = S.estado?.conta?.username || 'sua.marca';
+  const palavra = (r.keywords[0] || 'quero').toUpperCase();
+  const barra = '<div class="barra"><span>9:41</span><span>●●● ▮</span></div>';
+  const img = r.postPicture ? `<img class="post-img" src="${esc(r.postPicture)}" alt="">` : '<div class="post-img">seu post</div>';
+  const botoesDm = r.botoes.filter((b) => b.title.trim());
+  const bolhaBotoes = (txt, btns) => `<div class="bolha ela">${esc(personaliza(txt))}${btns.length ? `<div class="btns">${btns.map((b) => `<div>${esc(personaliza(b))}</div>`).join('')}</div>` : ''}</div>`;
+  let html = barra;
+  if (S.aba === 'post') {
+    const leg = r.trigger === 'comment' ? (r.postTitle || `comenta ${palavra} que eu te mando na DM`) : r.trigger === 'story_reply' ? `responde ${palavra} neste story` : r.trigger === 'live_comment' ? `comenta ${palavra} aqui na live` : 'me marca no seu story';
+    html += `<div class="cab"><span class="ava"></span>${esc(user)}</div><div class="corpo">${r.trigger === 'comment' || r.trigger === 'live_comment' ? img : '<div class="post-img" style="aspect-ratio:9/14">story</div>'}<div class="legenda"><b>${esc(user)}</b> ${esc(leg.slice(0, 160))}</div>${r.trigger === 'comment' && r.escopo === 'todos' ? '<div class="sistema">vale para todos os seus posts</div>' : ''}</div>`;
+  } else if (S.aba === 'comentarios') {
+    if (!['comment', 'live_comment'].includes(r.trigger)) html += `<div class="cab">Comentários</div><div class="corpo"><div class="sistema">Story não tem comentário público. Veja a aba DM.</div></div>`;
+    else {
+      const resp = r.respostas.filter((s) => s.trim());
+      html += `<div class="cab">Comentários</div><div class="corpo"><div class="com"><span class="ava cinza"></span><div class="txt"><b>maria.cria</b>${esc(r.palavrasModo === 'palavras' ? palavra : 'amei, quero!')}<div class="meta">agora · Responder</div></div></div>
+        ${r.responderPublico && resp.length ? `<div class="com resp"><span class="ava"></span><div class="txt"><b>${esc(user)}</b>${esc(personaliza(resp[0]))}<div class="meta">agora${resp.length > 1 ? ` · sorteia entre ${resp.length} frases` : ''}</div></div></div>` : '<div class="sistema">sem resposta pública</div>'}</div>`;
+    }
+  } else {
+    html += `<div class="cab"><span class="ava"></span>${esc(user)}</div><div class="corpo">`;
+    if (r.trigger === 'story_reply') html += `<div class="bolha eu">${esc(palavra)}</div><div class="toque">respondeu ao seu story</div>`;
+    else if (r.trigger === 'story_mention') html += `<div class="sistema">maria.cria te mencionou no story</div>`;
+    else html += `<div class="sistema">maria.cria comentou "${esc(r.palavrasModo === 'palavras' ? palavra : 'amei, quero!')}"</div>`;
+    if (r.seguidores !== 'todos') {
+      html += bolhaBotoes(r.gate.message, [r.gate.buttonLabel || (r.seguidores === 'toque' ? 'Liberar' : 'Já estou seguindo'), ...(r.seguidores === 'seguidores' && r.gate.profileButtonLabel ? [r.gate.profileButtonLabel] : [])]);
+      html += `<div class="bolha eu">${esc(r.gate.buttonLabel || 'Já estou seguindo')}</div><div class="toque">${r.seguidores === 'seguidores' ? 'ela segue e toca' : 'ela toca'}</div>`;
+    }
+    html += bolhaBotoes(r.dmTextos.find((s) => s.trim()) || '(escreva a mensagem no passo da DM)', botoesDm.map((b) => b.title));
+    if (r.imagem.trim()) html += `<div class="bolha ela" style="padding:4px"><img src="${esc(r.imagem)}" alt="" style="width:100%;border-radius:14px;display:block" onerror="this.replaceWith(document.createTextNode('imagem'))"></div>`;
+    if (r.seguidores === 'seguidores' && r.gate.notFollowingMessage.trim()) html += `<div class="sistema">se tocar sem seguir, recebe:</div>${bolhaBotoes(r.gate.notFollowingMessage, [r.gate.buttonLabel || 'Já estou seguindo'])}`;
+    html += '</div>';
+  }
+  $('#preview').innerHTML = html;
+}
+
+async function salvar(ligar) {
+  const r = S.rascunho;
+  if (conferir(r).erros.length) return;
+  if (r.tambemDm && !r.keywords.length) r.tambemDm = false;
+  const corpo = paraApi({ ...r, isActive: ligar });
+  const bt = ligar ? $('#ativar') : $('#salvarPausada'); bt.disabled = true; bt.textContent = 'Salvando...';
+  try {
+    if (S.editandoId) await api('PATCH', '/automacoes/' + S.editandoId, corpo);
+    else await api('POST', '/automacoes', corpo);
+    aviso(ligar ? 'Automação no ar! Ela responde os comentários feitos a partir de agora.' : 'Salva desligada.');
+    ir('lista');
+  } catch (err) {
+    $('#conferencia').insertAdjacentHTML('afterbegin', `<div class="aviso erro"><b>O Zernio recusou:</b> ${esc(err.message)}</div>`);
+    bt.disabled = false; bt.textContent = ligar ? (S.editandoId ? 'Salvar alterações' : 'Ativar automação') : 'Salvar desligada';
+  }
+}
+
+// ===================== tela: perguntas de abertura =====================
+async function telaPerguntas() {
+  $('#tela').innerHTML = `<h1>Perguntas de <em>abertura</em></h1><p class="sub">Até 4 perguntas prontas que aparecem para quem abre o seu direct pela primeira vez. Quem toca numa delas já conta como "mandou mensagem".</p><div class="cartao" style="max-width:640px" id="perg">Carregando...</div>`;
+  let lista = [];
+  try {
+    const j = await api('GET', '/perguntas');
+    const d = j.data || j.ice_breakers || [];
+    lista = (Array.isArray(d) ? d : []).flatMap((x) => x.call_to_actions || [x]).map((x) => x.question || '').filter(Boolean);
+  } catch (err) { $('#perg').innerHTML = `<div class="aviso erro">${esc(err.message)}</div>`; return; }
+  while (lista.length < 4) lista.push('');
+  $('#perg').innerHTML = lista.map((q, i) => `<label class="campo" for="q${i}">Pergunta ${i + 1} <span class="cont" id="cq${i}">${q.length}/80</span></label><input id="q${i}" type="text" maxlength="80" value="${esc(q)}" placeholder="${['Quero o material gratuito', 'Como funciona o seu serviço?', 'Qual o valor?', 'Quero falar com você'][i]}">`).join('') + `<div style="margin-top:16px;display:flex;gap:10px"><button class="btn principal" id="salvarQ">Salvar perguntas</button><button class="btn perigo" id="limparQ">Tirar todas</button></div><div class="aviso info">Para responder cada pergunta automaticamente, crie uma automação de comentário com "Também responder quem mandar a palavra na DM" e use uma palavra da pergunta.</div>`;
+  lista.forEach((_, i) => $('#q' + i).oninput = (e) => ($('#cq' + i).textContent = e.target.value.length + '/80'));
+  $('#salvarQ').onclick = async () => {
+    const qs = lista.map((_, i) => $('#q' + i).value.trim()).filter(Boolean);
+    try { await api('PUT', '/perguntas', { ice_breakers: qs.map((question) => ({ question, payload: question.toLowerCase().slice(0, 60) })) }); aviso('Perguntas salvas.'); }
+    catch (err) { aviso(err.message, true); }
+  };
+  $('#limparQ').onclick = async () => { if (!confirm('Tirar todas as perguntas?')) return; try { await api('DELETE', '/perguntas'); aviso('Perguntas removidas.'); telaPerguntas(); } catch (err) { aviso(err.message, true); } };
+}
+
+// ===================== tela: regras =====================
+function telaRegras() {
+  $('#tela').innerHTML = `<h1>Regras do <em>Instagram</em></h1><p class="sub">O que a Meta permite. Seguir isso protege a sua conta.</p>
+  <div class="cartao regras" style="max-width:760px"><ol>
+    <li><b>Uma resposta por comentário.</b> Quem comentou recebe uma única DM automática daquele comentário. A próxima só sai depois que a pessoa responder ou tocar num botão, e dentro de 24 horas.</li>
+    <li><b>Até 7 dias.</b> Comentário com mais de 7 dias não pode mais receber DM. E a automação só responde comentários feitos depois de ligada.</li>
+    <li><b>Janela de 24 horas.</b> Depois que a pessoa fala com você, automações podem responder por 24 horas. Passou disso, só você, à mão.</li>
+    <li><b>Primeira DM para quem não te segue: de preferência só texto.</b> Com botão ou imagem, o Instagram pode recusar e a resposta daquele comentário se perde. O "só para seguidores" e o "toque para liberar" resolvem isso.</li>
+    <li><b>Varie a resposta pública.</b> A mesma frase em centenas de comentários parece spam. Use 3 a 6 versões e evite resposta só com emoji.</li>
+    <li><b>Limite oficial:</b> até 750 respostas privadas por hora em post e reels.</li>
+    <li><b>A chave do Zernio é uma senha.</b> Não mande em grupo, não poste print. Se vazar, apague no Zernio e crie outra.</li>
+    <li><b>Se a conexão cair</b> (o Instagram pede para entrar de novo), as automações param até você reconectar no Zernio. Nada se perde.</li>
+  </ol></div>`;
+}
+
+// ===================== início =====================
+(async () => {
+  try { S.estado = await api('GET', '/estado'); } catch { S.estado = { configurado: false }; }
+  const nome = getComputedStyle(document.documentElement).getPropertyValue('--nome-painel').trim().replace(/^"|"$/g, '');
+  if (nome) { $('#nomePainel').textContent = nome; document.title = nome; $('.logo .marca').textContent = nome.replace(/^(meu|minha)\s+/i,'')[0] || nome[0]; }
+  if (S.estado.configurado) await carregarContas();
+  rodape();
+  ir(S.estado.configurado ? 'lista' : 'conectar');
+})();
+</script>
+</body>
+</html>
