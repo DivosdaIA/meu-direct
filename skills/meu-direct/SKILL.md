@@ -144,7 +144,7 @@ Depois, você faz sozinho, de dentro da pasta do painel:
 4. Variáveis de ambiente (produção), sempre por `printf '%s' "$VALOR" | vercel env add NOME production`, **sem mostrar a chave no chat**:
    - `ZERNIO_API_KEY`, `ZERNIO_ACCOUNT_ID`, `ZERNIO_PROFILE_ID`, `ZERNIO_USERNAME`: leia do `.env` da pasta.
    - `PAINEL_SEGREDO`: gere com `openssl rand -base64 48` (no Windows, `[Convert]::ToBase64String((1..48|%{Get-Random -Max 256}))` no PowerShell).
-   - `PAINEL_USUARIOS`: `usuario:senha` separados por `;`. Gere uma senha **forte** para cada pessoa: 4 palavras aleatórias em português separadas por traço e 2 números (ex.: `cacto-violeta-mapa-trovao-58`), sorteadas com `openssl rand` e nunca escolhidas por você. Sem `;` nem `:`. O painel bloqueia 15 minutos depois de 5 erros, mas a proteção principal é a senha forte.
+   - `PAINEL_USUARIOS`: `usuario:senha` separados por `;`. Gere uma senha **forte** para cada pessoa: 4 palavras aleatórias em português separadas por traço e 2 números (ex.: `cacto-violeta-mapa-trovao-58`), sorteadas com `openssl rand` e nunca escolhidas por você. Sem `;` nem `:`. O painel bloqueia por 15 minutos o aparelho que errar 5 vezes a senha de alguém (a pessoa certa continua entrando do aparelho dela), mas a proteção principal é a senha forte.
 5. Publique: `vercel deploy --prod --yes`. Guarde o link que aparecer no fim.
 6. Confira: `curl -s <link>/api/estado` tem que responder pedindo login (`precisaLogin`). Abra o link no navegador, mostre a tela de login e entre com o usuário dela.
 7. Salve a lista de acessos em `equipe-acessos.txt` na pasta do painel (permissão só para ela: `chmod 600`) e acrescente esse arquivo ao `.gitignore` e ao `.vercelignore`.

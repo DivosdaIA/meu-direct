@@ -10,12 +10,16 @@ import crypto from 'node:crypto';
 import { rotear } from '../nucleo.mjs';
 
 const DIAS = 7;
-// limite de tentativas: 5 erros em 15 minutos bloqueiam aquele usuario e aquele endereco por 15 minutos.
-// Vale enquanto a funcao esta ativa na Vercel (nao ha banco); a protecao principal sao as senhas fortes.
+// limite de tentativas, por pessoa+aparelho (5 erros em 15 min) e por aparelho (20 erros em 15 min).
+// Quem erra de outro aparelho nao tranca a pessoa certa. Vale enquanto a funcao esta ativa na
+// Vercel (nao ha banco); a protecao principal sao as senhas fortes.
 const TENTATIVAS = new Map();
-const JANELA = 15 * 60 * 1000, MAX_ERROS = 5;
-function bloqueado(chave) { const x = TENTATIVAS.get(chave); return !!x && x.n >= MAX_ERROS && Date.now() - x.ini < JANELA; }
-function errou(chave) { const x = TENTATIVAS.get(chave); if (!x || Date.now() - x.ini > JANELA) TENTATIVAS.set(chave, { n: 1, ini: Date.now() }); else x.n++; }
+const JANELA = 15 * 60 * 1000, MAX_PAR = 5, MAX_IP = 20, TETO = 5000;
+function bloqueado(chave, max) { const x = TENTATIVAS.get(chave); return !!x && x.n >= max && Date.now() - x.ini < JANELA; }
+function errou(chave) {
+  if (TENTATIVAS.size >= TETO) { for (const [k, v] of TENTATIVAS) if (Date.now() - v.ini > JANELA) TENTATIVAS.delete(k); if (TENTATIVAS.size >= TETO) TENTATIVAS.clear(); }
+  const x = TENTATIVAS.get(chave); if (!x || Date.now() - x.ini > JANELA) TENTATIVAS.set(chave, { n: 1, ini: Date.now() }); else x.n++;
+}
 const segredo = () => process.env.PAINEL_SEGREDO || '';
 
 function usuarios() {
@@ -74,13 +78,14 @@ export default async function handler(req, res) {
   const corpo = ['POST', 'PATCH', 'PUT'].includes(req.method) ? await lerCorpo(req) : null;
 
   if (url.pathname === '/api/entrar' && req.method === 'POST') {
-    const usuario = String(corpo?.usuario || '').trim().toLowerCase();
+    const usuario = String(corpo?.usuario || '').trim().toLowerCase().slice(0, 64);
     const senha = String(corpo?.senha || '');
-    const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim();
-    if (bloqueado('u:' + usuario) || bloqueado('ip:' + ip)) return responder(res, 429, { error: 'Muitas tentativas erradas. Espere 15 minutos e tente de novo.', precisaLogin: true });
+    const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim().slice(0, 64);
     const certa = usuarios().get(usuario);
-    if (!certa || !igual(senha, certa)) { errou('u:' + usuario); errou('ip:' + ip); await new Promise((r) => setTimeout(r, 800)); return responder(res, 401, { error: 'Usuario ou senha errados.', precisaLogin: true }); }
-    TENTATIVAS.delete('u:' + usuario);
+    const par = 'p:' + (certa ? usuario : '?') + '|' + ip; // usuario que nao existe cai num balde so
+    if (bloqueado(par, MAX_PAR) || bloqueado('ip:' + ip, MAX_IP)) return responder(res, 429, { error: 'Muitas tentativas erradas. Espere 15 minutos e tente de novo.', precisaLogin: true });
+    if (!certa || !igual(senha, certa)) { errou(par); errou('ip:' + ip); await new Promise((r) => setTimeout(r, 800)); return responder(res, 401, { error: 'Usuario ou senha errados.', precisaLogin: true }); }
+    TENTATIVAS.delete(par);
     const dados = Buffer.from(`${usuario}|${Date.now() + DIAS * 864e5}|${marcaDaSenha(certa)}`).toString('base64url');
     return responder(res, 200, { ok: true, usuario }, [cookie('md_sessao', `${dados}.${assinar(dados)}`, DIAS * 86400)]);
   }
