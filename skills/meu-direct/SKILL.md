@@ -60,7 +60,7 @@ Guarde as respostas. Não invente cor: sem resposta, o visual neutro do molde fi
 ## Etapa 3. Montar o painel (2 minutos, você faz sozinho)
 
 1. Crie a pasta `~/meu-direct` (ou onde ela pedir) e anote o caminho em `~/.claude/meu-direct.txt`.
-2. Copie `molde/servidor.mjs` e `molde/index.html` desta skill para lá, **sem mudar a lógica**.
+2. Copie **todo o conteúdo** de `molde/` desta skill para lá, inclusive os arquivos que começam com ponto (`.vercelignore`) e a pasta `api/`, **sem mudar a lógica**. O `servidor.mjs` e o `nucleo.mjs` rodam o painel no computador; `api/`, `vercel.json` e `package.json` só são usados se um dia ela colocar na internet (Etapa 7).
 3. Aplique a marca **só no bloco MARCA** do `index.html` (entre `/* ===== MARCA` e `/* ===== fim da MARCA`). Como distribuir as cores:
    - `--nome-painel`: o nome entre aspas.
    - `--menu-fundo`: a cor mais escura da marca (o menu lateral). `--menu-texto`: a cor mais clara, para ler em cima dela.
@@ -124,6 +124,38 @@ Ela preenche no painel, de cima para baixo, olhando o celular do lado. Os avisos
 
 Feche com: "Pronto. A partir de agora roda sozinho, mesmo com o computador desligado. Para mexer, é só me pedir: abre meu painel."
 
+## Etapa 7. Colocar na internet para a equipe (Vercel)
+
+Só depois que o painel já funciona no computador dela (tem `.env` com a chave e a conta). Explique antes, em 3 frases:
+- O painel ganha um link na internet. Cada pessoa da equipe entra com o **próprio usuário e senha**.
+- A chave do Zernio fica guardada em segredo na Vercel. Ninguém da equipe vê a chave nem precisa de conta no Zernio ou no Claude.
+- Para tirar alguém, é só pedir: apago a pessoa e publico de novo, e ela perde o acesso na hora.
+
+Avise também, com honestidade: **pelos termos da Vercel, o plano grátis (Hobby) é para uso pessoal, sem fins comerciais.** Uso de agência com clientes pede o plano Pro. Deixe que ela decida.
+
+Pergunte, uma por vez:
+1. **Quem vai entrar?** Os nomes (ou apelidos) de cada pessoa, inclusive ela. Viram os usuários, em minúsculas e sem espaço.
+2. **Que nome quer no link?** Vira o nome do projeto na Vercel (ex.: `direct-agencia-x`).
+
+Depois, você faz sozinho, de dentro da pasta do painel:
+1. Confira os arquivos da versão online: `api/painel.js`, `nucleo.mjs`, `vercel.json`, `package.json` e `.vercelignore` (com `.env`). Se faltar algum (painel montado antes desta versão), copie do `molde/`.
+2. Vercel CLI: `vercel --version`. Se faltar, `npm i -g vercel`. Depois `vercel whoami`; se não estiver logada, rode `vercel login` e peça para ela confirmar no navegador (quem não tem conta cria na hora, em vercel.com, com o e-mail ou o GitHub).
+3. Crie e ligue o projeto: `vercel link --yes --project <nome>`.
+4. Variáveis de ambiente (produção), sempre por `printf '%s' "$VALOR" | vercel env add NOME production`, **sem mostrar a chave no chat**:
+   - `ZERNIO_API_KEY`, `ZERNIO_ACCOUNT_ID`, `ZERNIO_PROFILE_ID`, `ZERNIO_USERNAME`: leia do `.env` da pasta.
+   - `PAINEL_SEGREDO`: gere com `openssl rand -base64 48` (no Windows, `[Convert]::ToBase64String((1..48|%{Get-Random -Max 256}))` no PowerShell).
+   - `PAINEL_USUARIOS`: `usuario:senha` separados por `;`. Gere uma senha forte e fácil de digitar para cada pessoa (ex.: duas palavras, um traço e dois números: `Lua-Azul-42`), sem `;` nem `:`.
+5. Publique: `vercel deploy --prod --yes`. Guarde o link que aparecer no fim.
+6. Confira: `curl -s <link>/api/estado` tem que responder pedindo login (`precisaLogin`). Abra o link no navegador, mostre a tela de login e entre com o usuário dela.
+7. Salve a lista de acessos em `equipe-acessos.txt` na pasta do painel (permissão só para ela: `chmod 600`) e acrescente esse arquivo ao `.gitignore` e ao `.vercelignore`.
+8. Entregue: o link e o usuário e a senha de cada pessoa. Diga para ela mandar **para cada pessoa em particular**, nunca no grupo.
+
+**Manutenção (quando ela pedir):**
+- *Incluir ou tirar alguém:* `vercel env rm PAINEL_USUARIOS production --yes`, adicione a lista nova e `vercel deploy --prod --yes`. Atualize `equipe-acessos.txt`.
+- *Trocar a chave do Zernio:* mesmo caminho com `ZERNIO_API_KEY`.
+- *Alguém esqueceu a senha:* gere uma nova só para essa pessoa e publique de novo.
+- *Mudou o visual no computador:* `vercel deploy --prod --yes` publica a mesma pasta.
+
 ---
 
 ## Várias contas (agência com clientes)
@@ -134,12 +166,11 @@ Um painel atende todas as contas de Instagram conectadas no mesmo Zernio. Quando
 - Custo: 2 contas grátis no total (Instagram e Página do Facebook contam separado). Da 3ª à 10ª, US$ 6 por conta por mês. Avise antes de ela conectar a 3ª.
 - Para separar clientes, o Zernio usa **perfis** (uma pasta por marca). Sugira um perfil por cliente.
 
-## Onde o painel roda: no computador, sem login
+## Onde o painel roda
 
-O painel roda só no computador dela (`127.0.0.1`), e por isso **não tem login**: ninguém de fora consegue abrir. As automações rodam no Zernio, então ela não precisa deixar nada ligado. Se ela perguntar por que não colocar na internet:
+**No computador (padrão):** o painel abre só em `127.0.0.1`, por isso não tem login: ninguém de fora acessa. As automações rodam no Zernio, então nada precisa ficar ligado.
 
-- Na internet, o painel precisaria de login e senha, e a chave do Zernio ficaria guardada num servidor: mais coisa para proteger.
-- Só vale a pena se uma **equipe** precisar mexer de computadores diferentes. Nesse caso, não improvise: diga que é uma versão diferente (com login) e que ela pode pedir para construir junto, como projeto à parte.
+**Na internet, para a equipe:** quando ela pedir para "colocar o painel na internet", "fazer o deploy", "a minha equipe acessar", siga a **Etapa 7**. A versão online tem login por pessoa e a chave fica guardada na Vercel.
 
 ---
 
@@ -154,7 +185,7 @@ Leia a pasta em `~/.claude/meu-direct.txt` (ou `~/meu-direct`), rode `node servi
 Quando ela pedir "atualiza a minha skill do meu-direct" (ou quando algo do Zernio mudar):
 
 1. Baixe a versão nova: `https://github.com/DivosdaIA/meu-direct/archive/refs/heads/main.zip`, descompacte numa pasta temporária e copie `skills/meu-direct` por cima de `~/.claude/skills/meu-direct`.
-2. Se ela já tem um painel montado, atualize também a pasta do painel: copie o `molde/servidor.mjs` novo por cima do dela e, no `index.html`, troque tudo **menos o bloco MARCA e o `<link>` das fontes** (a marca dela continua igual). Nunca apague o `.env` nem o `logo`.
+2. Se ela já tem um painel montado, atualize também a pasta do painel: copie por cima `servidor.mjs`, `nucleo.mjs`, `api/`, `vercel.json`, `package.json` e `.vercelignore` e, no `index.html`, troque tudo **menos o bloco MARCA, o `<link>` das fontes e o subtítulo do logo** (a marca dela continua igual). Nunca apague o `.env`, o `logo` nem o `equipe-acessos.txt`. Se o painel estiver na internet, publique de novo (`vercel deploy --prod --yes`).
 3. Reabra o painel e confira que as automações dela continuam aparecendo (elas ficam no Zernio, então não se perdem).
 
 ---
@@ -173,8 +204,8 @@ Se ela quiser uma tela nova no painel para isso, construa junto, no mesmo padrã
 
 ## Regras desta skill
 
-- **A chave nunca vai para o `index.html`**, nem para print, nem para mensagem. Só para o `.env`.
-- O servidor só aceita conexões do próprio computador (`127.0.0.1`). Não mude isso, não publique o painel na internet.
+- **A chave nunca vai para o `index.html`**, nem para print, nem para mensagem. Só para o `.env` (no computador) ou para as variáveis de ambiente da Vercel (online).
+- O servidor local só aceita conexões do próprio computador (`127.0.0.1`). Não mude isso. Na internet, só pela Etapa 7, que tem login.
 - Não mexa na lógica do molde para "melhorar": ele foi testado. Mudanças de visual ficam no bloco MARCA.
 - Tudo que a pessoa precisa fazer no terminal, você faz por ela.
 - Linguagem simples: termo técnico só com a tradução na mesma frase.

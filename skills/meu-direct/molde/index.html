@@ -65,6 +65,7 @@ a { color: inherit; }
 
 main { padding: 34px 40px 90px; min-width: 0; position: relative; }
 main:focus { outline: none; }
+main { overflow-x: clip; }
 main::before { content: ""; position: absolute; right: -160px; top: -200px; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--destaque-2) 22%, transparent), transparent 70%); pointer-events: none; z-index: 0; }
 main > * { position: relative; z-index: 1; }
 h1 { font-family: var(--fonte-titulo); font-size: 34px; margin: 0 0 6px; letter-spacing: -.01em; line-height: 1.1; font-weight: 700; }
@@ -182,6 +183,16 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--destaque); 
 .sistema { text-align: center; color: #8e8e8e; font-size: 11px; margin: 12px 0 4px; }
 .toque { text-align: right; color: #8e8e8e; font-size: 11px; }
 
+/* login (versao online) */
+.login-fundo { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: radial-gradient(circle at 20% 80%, color-mix(in srgb, var(--destaque-2) 40%, transparent), transparent 55%), linear-gradient(160deg, var(--menu-fundo), color-mix(in srgb, var(--menu-fundo) 75%, #000)); }
+.login { width: min(400px, 100%); background: var(--superficie); border-radius: 26px; padding: 34px 30px; box-shadow: 0 30px 80px rgba(0,0,0,.35); text-align: center; }
+.login .marca-login { width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 18px; display: grid; place-items: center; overflow: hidden; background: linear-gradient(135deg, var(--destaque), var(--destaque-2)); color: var(--destaque-texto); font-family: var(--fonte-titulo); font-size: 28px; font-weight: 700; }
+.login .marca-login img { width: 100%; height: 100%; object-fit: contain; }
+.login h1 { font-size: 28px; margin-bottom: 4px; }
+.login form { text-align: left; margin-top: 18px; }
+.login .btn { width: 100%; justify-content: center; margin-top: 18px; padding: 13px; }
+.sair { margin-top: 10px; background: none; border: 1px solid rgba(255,255,255,.2); color: inherit; border-radius: 99px; padding: 6px 12px; cursor: pointer; font-size: 12.5px; width: 100%; }
+
 /* modal, tabela, avisos */
 .fundo-modal { position: fixed; inset: 0; background: rgba(20,14,12,.5); display: grid; place-items: center; padding: 16px; z-index: 20; backdrop-filter: blur(3px); }
 .modal { background: var(--superficie); border-radius: 22px; width: min(700px, 100%); max-height: 86vh; overflow: auto; padding: 24px; box-shadow: 0 30px 80px rgba(0,0,0,.3); }
@@ -241,11 +252,13 @@ const personaliza = (s) => String(s || '').replace(/\{\{\s*first_name\s*\}\}/g, 
 async function api(metodo, caminho, corpo) {
   const r = await fetch('/api' + caminho, { method: metodo, headers: { 'Content-Type': 'application/json', 'x-meu-direct': '1' }, body: corpo ? JSON.stringify(corpo) : undefined });
   let j = {}; try { j = await r.json(); } catch {}
+  if (r.status === 401 && j.precisaLogin && caminho !== '/entrar') { telaLogin(); const e = new Error('Entre com o seu usuario e senha.'); e.login = true; throw e; }
   if (!r.ok) { const e = new Error(traduzErro(j, r.status)); e.status = r.status; e.dados = j; throw e; }
   return j;
 }
 function traduzErro(j, status) {
   const cod = j?.code || '';
+  if (j?.precisaLogin) return j.error || 'Entre com o seu usuario e senha.';
   if (status === 401 || cod === 'invalid_credentials') return 'A chave do Zernio não foi aceita. Confira se copiou inteira, em Configurações.';
   if (cod === 'TOKEN_EXPIRED') return 'A conexão do Instagram com o Zernio caiu. Entre no Zernio e reconecte a conta (as automações continuam salvas).';
   if (status === 409) return 'Já existe uma automação ligada nesse post. Desligue a outra ou edite ela.';
@@ -394,7 +407,9 @@ function rodape() {
     <div class="conta-atual"><span class="av">${c.foto ? `<img src="${esc(c.foto)}" alt="">` : esc((c.username || '?')[0].toUpperCase())}</span><span><b>@${esc(c.username || 'sua conta')}</b><small>${esc(c.displayName || '')}</small></span></div>
     ${outras.length > 1 ? `<label class="rot" for="trocaConta" style="display:block;margin:12px 0 0">Trocar de conta</label><select id="trocaConta">${outras.map((o) => `<option value="${esc(o.id)}" ${o.id === c.id ? 'selected' : ''}>@${esc(o.username)}</option>`).join('')}</select>` : ''}
     <a href="https://zernio.com/dashboard" target="_blank" rel="noopener">+ conectar outra conta no Zernio</a>
-    ${e.demo ? '<span class="selo-demo">modo demonstração</span>' : ''}`;
+    ${e.demo ? '<span class="selo-demo">modo demonstração</span>' : ''}
+    ${e.online ? `<button class="sair" id="btnSair">sair (${esc(e.usuario || '')})</button>` : ''}`;
+  const bs = $('#btnSair'); if (bs) bs.onclick = sair;
   const sel = $('#trocaConta');
   if (sel) sel.onchange = async () => {
     const nova = outras.find((o) => o.id === sel.value);
@@ -404,9 +419,35 @@ function rodape() {
 }
 async function carregarContas() { try { const j = await api('GET', '/contas'); S.contas = j.contas || []; const a = S.contas.find((x) => x.id === S.estado?.conta?.id); if (a && S.estado.conta) S.estado.conta = { ...a, ...S.estado.conta, foto: a.foto, displayName: a.displayName }; } catch { S.contas = []; } }
 
+// ===================== login (versao online) =====================
+function telaLogin(msg) {
+  if (document.querySelector('.login-fundo')) return;
+  const nome = $('#nomePainel').textContent;
+  const logo = document.querySelector('.logo-img');
+  document.body.insertAdjacentHTML('beforeend', `<div class="login-fundo"><div class="login" role="dialog" aria-label="Entrar">
+    <div class="marca-login">${logo ? `<img src="${esc(logo.getAttribute('src'))}" alt="">` : esc(nome[0])}</div>
+    <h1>${esc(nome)}</h1><p class="sub" style="margin:0">Entre com o usuário e a senha que você recebeu.</p>
+    <form id="formLogin"><label class="campo" for="lu">Usuário</label><input id="lu" type="text" autocomplete="username" autocapitalize="none" required>
+    <label class="campo" for="ls">Senha</label><input id="ls" type="password" autocomplete="current-password" required>
+    <div id="lerro"></div><button class="btn principal" type="submit">Entrar</button></form></div></div>`);
+  $('#lu').focus();
+  $('#formLogin').onsubmit = async (e) => {
+    e.preventDefault();
+    try { await api('POST', '/entrar', { usuario: $('#lu').value, senha: $('#ls').value }); location.reload(); }
+    catch (err) { $('#lerro').innerHTML = `<div class="aviso erro">${esc(err.message)}</div>`; }
+  };
+}
+async function sair() { try { await api('POST', '/sair'); } catch {} location.reload(); }
+
 // ===================== tela: conectar =====================
 async function telaConectar() {
   const e = S.estado || {};
+  if (e.online) {
+    $('#tela').innerHTML = `<h1><em>Configurações</em></h1><p class="sub">Versão online do painel, com login.</p>
+      <div class="cartao" style="max-width:640px"><p style="margin-top:0"><b>A chave do Zernio fica guardada na Vercel</b>, em segredo, e nunca aparece aqui. Para trocar a chave, incluir ou tirar alguém da equipe, peça ao Claude no computador de quem publicou: <code>/meu-direct</code>.</p>
+      <p>Você entrou como <b>${esc(e.usuario || '')}</b>. A conta do Instagram que você escolhe no menu fica lembrada só para você.</p></div>`;
+    return;
+  }
   $('#tela').innerHTML = `
     <h1><em>Configurações</em></h1>
     <p class="sub">Conecte o painel à sua conta do Zernio. Você faz isso uma vez só.</p>
@@ -783,9 +824,9 @@ function telaRegras() {
 
 // ===================== início =====================
 (async () => {
-  try { S.estado = await api('GET', '/estado'); } catch { S.estado = { configurado: false }; }
   const nome = getComputedStyle(document.documentElement).getPropertyValue('--nome-painel').trim().replace(/^"|"$/g, '');
   if (nome) { $('#nomePainel').textContent = nome; document.title = nome; $('.logo .marca').textContent = nome.replace(/^(meu|minha)\s+/i,'')[0] || nome[0]; }
+  try { S.estado = await api('GET', '/estado'); } catch (err) { if (err.login) return; S.estado = { configurado: false }; }
   if (S.estado.configurado) await carregarContas();
   rodape();
   ir(S.estado.configurado ? 'lista' : 'conectar');

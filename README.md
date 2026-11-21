@@ -11,6 +11,7 @@ Quem comenta a palavra-chave no seu post recebe a mensagem na DM na hora. Quem r
 - Perguntas de abertura do direct
 - Histórico de quem recebeu, com o motivo de quem não recebeu
 - Várias contas no mesmo painel (para quem atende clientes)
+- Opcional: publicar na Vercel com login para a equipe
 
 As automações rodam no Zernio, 24 horas por dia, **mesmo com o seu computador desligado**. O painel roda no seu computador e serve para criar e editar.
 
@@ -73,6 +74,7 @@ A sua marca e as suas automações continuam como estão.
 - **Instagram e Página do Facebook contam como 2 contas** no Zernio. Da 3ª conta em diante, US$ 6 por conta por mês.
 - A automação só responde comentários feitos **depois** de ligada, e o Instagram só deixa uma resposta automática por comentário, em até 7 dias.
 - O painel abre só no seu computador (`127.0.0.1`). Por isso não tem login: ninguém de fora consegue acessar.
+- **Quer que a equipe acesse?** Peça: `/meu-direct quero colocar o painel na internet para a minha equipe`. O Claude publica na Vercel com login para cada pessoa. A chave fica guardada na Vercel e ninguém da equipe vê.
 
 ---
 
@@ -82,7 +84,7 @@ Passos técnicos da instalação (a pessoa não digita nada disso):
 
 1. Baixe `https://github.com/DivosdaIA/meu-direct/archive/refs/heads/main.zip` para uma pasta temporária e descompacte (no Mac: `curl -L -o` e `unzip`; no Windows: `curl.exe -L -o` e `tar -xf`). Não precisa de git nem de conta no GitHub.
 2. Crie `~/.claude/skills` se não existir (no Windows, `%USERPROFILE%\.claude\skills`).
-3. Copie a pasta `meu-direct-main/skills/meu-direct` inteira para `~/.claude/skills/meu-direct`, mantendo `molde/` e `referencias/`. Se já existir uma versão, substitua e avise.
-4. Confira que existem `SKILL.md`, `molde/servidor.mjs`, `molde/index.html` e os 3 arquivos de `referencias/`.
+3. Copie a pasta `meu-direct-main/skills/meu-direct` inteira (inclusive arquivos que começam com ponto) para `~/.claude/skills/meu-direct`, mantendo `molde/` e `referencias/`. Se já existir uma versão, substitua e avise.
+4. Confira que existem `SKILL.md`, `molde/servidor.mjs`, `molde/nucleo.mjs`, `molde/index.html`, `molde/api/painel.js`, `molde/vercel.json` e os 3 arquivos de `referencias/`.
 5. Confira o Node (`node -v`, precisa ser 18 ou mais). Se faltar, instale (Mac com Homebrew: `brew install node`; senão, o instalador LTS de nodejs.org).
 6. Apague a pasta temporária e diga: "Pronto. Agora digita /meu-direct que a gente monta o seu painel."
