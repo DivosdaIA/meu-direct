@@ -144,7 +144,7 @@ Depois, você faz sozinho, de dentro da pasta do painel:
 4. Variáveis de ambiente (produção), sempre por `printf '%s' "$VALOR" | vercel env add NOME production`, **sem mostrar a chave no chat**:
    - `ZERNIO_API_KEY`, `ZERNIO_ACCOUNT_ID`, `ZERNIO_PROFILE_ID`, `ZERNIO_USERNAME`: leia do `.env` da pasta.
    - `PAINEL_SEGREDO`: gere com `openssl rand -base64 48` (no Windows, `[Convert]::ToBase64String((1..48|%{Get-Random -Max 256}))` no PowerShell).
-   - `PAINEL_USUARIOS`: `usuario:senha` separados por `;`. Gere uma senha forte e fácil de digitar para cada pessoa (ex.: duas palavras, um traço e dois números: `Lua-Azul-42`), sem `;` nem `:`.
+   - `PAINEL_USUARIOS`: `usuario:senha` separados por `;`. Gere uma senha **forte** para cada pessoa: 4 palavras aleatórias em português separadas por traço e 2 números (ex.: `cacto-violeta-mapa-trovao-58`), sorteadas com `openssl rand` e nunca escolhidas por você. Sem `;` nem `:`. O painel bloqueia 15 minutos depois de 5 erros, mas a proteção principal é a senha forte.
 5. Publique: `vercel deploy --prod --yes`. Guarde o link que aparecer no fim.
 6. Confira: `curl -s <link>/api/estado` tem que responder pedindo login (`precisaLogin`). Abra o link no navegador, mostre a tela de login e entre com o usuário dela.
 7. Salve a lista de acessos em `equipe-acessos.txt` na pasta do painel (permissão só para ela: `chmod 600`) e acrescente esse arquivo ao `.gitignore` e ao `.vercelignore`.
@@ -153,7 +153,8 @@ Depois, você faz sozinho, de dentro da pasta do painel:
 **Manutenção (quando ela pedir):**
 - *Incluir ou tirar alguém:* `vercel env rm PAINEL_USUARIOS production --yes`, adicione a lista nova e `vercel deploy --prod --yes`. Atualize `equipe-acessos.txt`.
 - *Trocar a chave do Zernio:* mesmo caminho com `ZERNIO_API_KEY`.
-- *Alguém esqueceu a senha:* gere uma nova só para essa pessoa e publique de novo.
+- *Alguém esqueceu a senha (ou a senha vazou):* gere uma nova só para essa pessoa e publique de novo. Trocar a senha derruba na hora as sessões abertas dela.
+- *Desconectar todo mundo de uma vez:* troque o `PAINEL_SEGREDO` e publique de novo.
 - *Mudou o visual no computador:* `vercel deploy --prod --yes` publica a mesma pasta.
 
 ---
