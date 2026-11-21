@@ -20,7 +20,7 @@ const JANELA = 15 * 60 * 1000, MAX_PAR = 5, MAX_IP = 20, FREIO_CONTA = 10, TETO 
 const vencido = (v) => Date.now() - v.ini > JANELA;
 function bloqueado(chave, max) { const x = TENTATIVAS.get(chave); return !!x && x.n >= max && !vencido(x); }
 function erros(chave) { const x = TENTATIVAS.get(chave); return x && !vencido(x) ? x.n : 0; }
-// abre espaco sem nunca apagar um bloqueio ativo; se nao der, devolve false (falha fechada)
+// abre espaco sem nunca apagar um bloqueio ativo; se nao der, a tentativa nova so nao e anotada (nunca barra o login de ninguem)
 function cabe() {
   if (TENTATIVAS.size < TETO) return true;
   for (const [k, v] of TENTATIVAS) if (vencido(v)) TENTATIVAS.delete(k);
@@ -95,12 +95,17 @@ export default async function handler(req, res) {
     // endereco do aparelho: so cabecalhos que a Vercel preenche (o visitante nao consegue falsificar)
     const ip = String(req.headers['x-vercel-forwarded-for'] || req.headers['x-real-ip'] || req.socket?.remoteAddress || '?').split(',')[0].trim().slice(0, 64);
     const par = 'p:' + usuario + '|' + ip, porIp = 'ip:' + ip, conta = 'c:' + usuario; // igual exista ou nao o usuario
-    const naoCabe = !TENTATIVAS.has(par) && !cabe();
-    if (naoCabe || bloqueado(par, MAX_PAR) || bloqueado(porIp, MAX_IP)) return responder(res, 429, { error: 'Muitas tentativas erradas. Espere 15 minutos e tente de novo.', precisaLogin: true });
-    const freio = Math.max(0, erros(conta) - FREIO_CONTA + 1);
-    await new Promise((r) => setTimeout(r, 800 + Math.min(freio, 8) * 1000));
+    if (bloqueado(par, MAX_PAR) || bloqueado(porIp, MAX_IP)) return responder(res, 429, { error: 'Muitas tentativas erradas. Espere 15 minutos e tente de novo.', precisaLogin: true });
+    // confere e conta ANTES de qualquer pausa: tentativas simultaneas nao escapam do limite
     const certa = usuarios().get(usuario);
-    if (!certa || !igual(senha, certa)) { errou(par); errou(porIp); errou(conta); return responder(res, 401, { error: 'Usuario ou senha errados.', precisaLogin: true }); }
+    const acertou = !!certa && igual(senha, certa);
+    if (!acertou) {
+      // freio da conta so para quem ja vinha errando deste aparelho (quem chega limpo nao fica lento)
+      const freio = erros(par) > 0 ? Math.max(0, erros(conta) - FREIO_CONTA + 1) : 0;
+      errou(par); errou(porIp); errou(conta);
+      await new Promise((r) => setTimeout(r, 800 + Math.min(freio, 8) * 1000));
+      return responder(res, 401, { error: 'Usuario ou senha errados.', precisaLogin: true });
+    }
     TENTATIVAS.delete(par);
     const dados = Buffer.from(`${usuario}|${Date.now() + DIAS * 864e5}|${marcaDaSenha(certa)}`).toString('base64url');
     return responder(res, 200, { ok: true, usuario }, [cookie('md_sessao', `${dados}.${assinar(dados)}`, DIAS * 86400)]);
